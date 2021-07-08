@@ -1,0 +1,455 @@
+
+Delight-Meditate design and deployment notes
+
+
+configuration
+	[this can all be skipped if you just want to try the server by running it locally]
+	overview
+		config files are TOML format
+		the server command line specifies one or more config files, last-one-wins for each variable
+		the first argument may be a directory; all subsequent arguments are then relative to it
+		config files are provided for 3 instances:
+			development - base.toml dev.toml $DM_DEV_SECRETS_TOML
+			test        - base.toml test.toml $DM_TEST_SECRETS_TOML
+			production  - base.toml prod.toml $DM_PRODUCTION_SECRETS_TOML
+		the command lines for the 3 instances are in these files:
+			./run.sh
+			deploy/dmtest.service
+			deploy/dmprod.service
+	make a secrets directory somewhere away from this source tree and protect it via "chmod 700".
+	make copies of config/example-secrets.toml for each of the dev, test, and production instances
+		in the secrets directory and protect each of them via "chmod 600".
+	make environment variables containing full pathnames to these files, named:
+		DM_DEV_SECRETS_TOML
+		DM_TEST_SECRETS_TOML
+		DM_PRODUCTION_SECRETS_TOML
+	customize the newly-created toml files as appropriate for your installation
+	note that your 3 customized secrets files appear last in their respective command lines,
+		so you can give them additional definitions which override definitions in the other files
+	by default, the test instance and production instance can run on the same server:
+		test instance - ports 8080/8081
+		production instance - ports 80/443
+
+
+procedures for building, testing, and deploying
+	if any client files have been modified
+		manually change appropriate file versions in:
+			build-fe.sh
+			Makefile
+			index.html
+		change client version in
+			index.html
+			base.toml
+		run build-fe.sh, which builds static assets
+			(only changing modified times when contents change)
+		delete now-obsolete versions in ./static
+	if anything in the gen subdirectory has been changed
+		cd gen
+		./gen.sh
+	run locally on development workstation
+		go mod vendor
+		dev.toml specifies that the database resides in /var/lib/dm and logs in /var/log/dm
+			sudo bash
+			mkdir -p /var/lib/dm /var/log/dm
+			chown MyUserId:MyGroupId /var/lib/dm /var/log/dm
+			chmod 755 /var/lib/dm /var/log/dm
+		to run:
+			go build
+			# if env var DM_DEV_SECRETS_TOML is not set, config/example-secrets.toml is used
+			./run.sh
+			visit http://localhost:8080
+		account creation
+			email verification just writes a token to the log, rather than emailing.
+			cut and append it to http://localhost:8080/verify/
+		after making changes, clear browser cache and storage, rather than spinning client version
+	deploy to test instance
+		./build-test.sh
+		./deploy-test.sh
+	deploy to production instance
+		./build-prod.sh
+		./deploy-prod.sh
+
+project organization
+	golang
+		source is in . and ./gen
+		code generation - tools i'm using are slightly fragile - gen/gen.sh does this:
+			remove *_ffjson_expose.go if any present.
+			remove all generated files.
+			temporarily move *Boil.go somewhere else
+			go generate
+			move *Boil.go back (they must live in pkg gen)
+	js/css
+		source is in js and css directories
+		static directory contains generated (browserified, minified) versions
+
+database
+	goleveldb is compiled into the server binary; no external database is required
+	goleveldeb is single-user - can scale up but not out
+	embedded goleveldb is very fast - can scale up substantially
+	replacing the database would not be hard - all database-specific code is in:
+		schema - gen/schema.go
+		code - dbops.go
+	this code works directly with goleveldb, which is a key/value store
+	porting to any other database should be easy
+		would port directly to any key/value store
+		porting to a database with tables, indices, etc. would be a great simplification
+
+front-end
+	single-page app benefits - lower user-perceived latency, reduced server load
+	URL schema and handling is described in a comment at the top of main.go.
+	client-side routing, history and scroll state
+		rlite - tiny router, just maps urls to functions, with path parameters
+		my spa code for history and scroll management
+			(borrows from page.js and brigade/delayed-scroll-restoration-polyfill)
+	page navigation
+		visit a new page, pushing an entry onto the history stack
+			spaVisit(path)
+		replace current page with a different page, do NOT push onto history stack
+			spaReplace(path) - updates path and scrolls to 0,0
+		re-render current page, leaving history stack unchanged
+			invoke page handler directly - re-renders but doesn't touch path or scroll
+		move backward in the history stack
+			window.history.back()
+	browser-specific issues
+		chrome/edge - navigate back from external site => restarts JS!
+			spa initialization code must look for and restore a history stack entry
+		iPhone - after heavy scrolling, it ignores mouse clicks for around 5 sec.
+			worked around by throttling the scroll handler
+		iPhone - after a pushState, it ignores all alerts and confirms
+			switched from alert/confirm to boostrap modals with promises
+	session expiration
+		client may get a 401 response to ANY request
+		it should immediately display the login page
+			except for exceptions enumerated in dm.js/ok401()
+	software upgrade
+		index.html (which is tiny) includes a client version number
+		several JS/CSS files (incl compiled html) can be changed independently
+		client sets Dm-Client-Version header with every request
+		when server gets a request from an obsolete client
+			if there's NO breaking change betw client version and server version
+				server sets Dm-Client-Update response header, but responds normally
+				whenever client sees Dm-Client-Update response header, it sets a flag
+				as soon as convenient (next render of login or home page), client reloads itself
+			if there IS a breaking change betw client version and server version
+				server responds with 418
+				client may get a 418 response to ANY request, must reload itself immediately
+			fallback plan
+				"some firewalls remove all response headers not mentioned in RFC 2616"
+				index.html is sent with a max cache time of 24 hrs
+
+click event handling
+	spa code - window.onclick (bubble)
+		if target or a parent is an <a> for a client-side URL, spaVisit and preventDefault
+	dom ready handler
+		navbar <a> elements
+			collapse('hide') on click
+		html click or touchend
+			if not in the navbar, collapse the navbar
+			if not in a dropdown, collapse dropdowns
+
+misc user experience issues
+	modalAlert/modalConfirm vs. dialogPage
+		the modals are for quick messages, like alert/confirm
+		dialogPage is for long-lasting messages, like waiting for email response
+		dialogPage can also be the target of a server redirect
+
+graphic design
+	narrow hamburger (see CSS gradients):
+		webdesign.tutsplus.com/tutorials/7-non-raster-approaches-for-making-the-hamburger-menu-icon--cms-21686
+
+front-end module management
+	XXX - add instructions here for installing npm, browserify, uglify, cssnano, handlebars, etc.
+	in everyday build workflow, use of all these tools is contained in Makefile and build-fe.sh
+	package.json and local node_modules are in the js directory.
+
+back end overview and dependencies
+	monolithic golang application server with no comprehensive back-end framework
+	can scale up but not out without switching to a different database
+	database - goleveldb compiled into the server binary
+	web server - go standard library, compiled into the server binary
+	SSL cert generation - golang.org/x/crypto/acme/autocert
+	sessions - 	github.com/gkong/go-qweb/qsess
+	request-scoped context - github.com/gkong/go-qweb/qctx
+	execution management - systemd
+	deployment - very simple hand-written scripts in the spirit of ansible
+	logging - JSON-formatted lines written to stdout by uber zap, view locally with lnav
+	metrics - prometheus golang client exposes via http, external prometheus instance scrapes, view with grafana
+	request throttling - github.com/throttled/throttled/v2
+	transactional email - mailgun via go std library smtp code
+
+server setup - XXX - this section needs to be re-written after bringing up a new production server
+	DNS
+		make A records for www and @ for delightmeditate.com
+	firewall
+		coreos-config.yaml saves an iptables rule set and enables the iptables-restore service
+		to see what's currently active - sudo iptables -nvL
+	directory structure
+		copy deploy/mkdirs.sh to the target and run it
+	systemd
+		install dmprod.service into /etc/systemd/system
+		install dmtest.service into /etc/systemd/system
+			=> restrict test instance write permissions, so don't fight over SSL cert maintenance
+		systemctl enable dmtest
+		systemctl enable dmprod
+		systemctl start dmtest
+		systemctl start dmprod
+	for debugging manually-invoked web servers
+		sudo setcap 'cap_net_bind_service=+eip' executable-name
+	administration via systemctl (systemd)
+		reboot the system - systemctl reboot
+		see what's running - systemctl
+		status of an individual unit - systemctl status <unit>
+		modify a unit - systemctl edit --full <unit>
+		control a unit - systemctl start / stop / restart / reload / disable / enable / status
+		if change a unit file - systemctl daemon-reload
+		custom unit files end up in /etc/systemd/system
+		replace cron with a (service, timer) pair
+
+cacheing
+	net/http does not set cache control headers.
+		it sets Last-modified
+		if it gets If-Modified-Since and not modified since, returns 304
+		build must not change modified times of assets unless contents have changed
+	Cache-Control max-age headers
+		index.html - 1 day
+		/static/* - 1 year
+	docs are chached by dm.js/doc()
+		currently, doc queries expire every 12 hours
+	the typical user hits the server daily only for the following:
+		/getdoc/queries/providers
+		/daychange
+
+logging
+	origination
+		- zap + my own field funcs which clone code in zap/field.go
+	shipping
+		- configurable between:
+			file pathname (written and rotated by natefinch/lumberjack)
+			stdout (12-factor style, consider agnivade/funnel)
+	alerts
+		- emailed via my own simple code to mailgun via SMTP
+		- throttling controlled via config.toml, visit /admin/alertreset to re-enable
+	viewing
+		- lnav on server - custom config file in ~/.lnav/formats/dm/dm.json
+			TERM=xterm lnav /var/log/dm/dm.log
+		fgrep '@' /dm/prod/log/dm.log |  sed -e 's/.*method//' | tail -200
+	performance
+		- logging to a file via natefinch/lumberjack costs 30-60 usec / entropy
+	early days
+		- set logAllHTTP in config.toml, to log every http request
+		- turn it off when traffic gets to high.
+		- for on-going research, can sample, by request or (maybe better) by user
+
+metrics
+	overview
+		dm server accumulates metrics
+		prometheus running on another server scrapes metrics from dm server
+		can use grafana on a workstation to diplay metrics from the prometheus server
+	my metrics - app
+		dm_http_requests_total{endpoint="readingdone"}
+		dm_http_request_handler_latency_seconds{endpoint="readingdone",quantile="0.999"}
+		dm_http_request_client_latency_seconds{endpoint="readingdone",quantile="0.999"}
+	my metrics - system
+		dm_cpu_idle_seconds
+		dm_mem_total_bytes
+		dm_mem_available_bytes
+	metrics that came with golang prometheus client library
+		[ also came with golang metrics, which i turned off ]
+		dm_process_cpu_seconds_total
+		dm_process_max_fds
+		dm_process_open_fds
+		dm_process_resident_memory_bytes
+		dm_process_start_time_seconds
+		dm_process_virtual_memory_bytes
+	TODO
+		disk utilization percentage - node_exporter - filesystem
+		data transferred via network - node_exporter - netdev
+		entropy - node_exporter - entropy
+	prometheus golang client for collecting and exposing via http
+		promhttp has built-in go and process data (omit by making a registry)
+		navigate to http://localhost:8080/ametrics as admin user to see output
+	prometheus node_exporter
+		stand-alone program that collects a TON of linux system metrics
+		i hate the complexity and storage requirements
+		instead, i hand-wrote a few system metrics and included them into dm
+	prometheus
+		counter - clients only increment and report
+			rate() calculates rate/sec
+		summary - percentile histogram
+		naming - see naming conventions in prometheus doc
+		to configure for scraping - customize prometheus.yml
+		cd <prometheus directory>; ./prometheus -config.file=prometheus.yml
+		point web browser at http://localhost:9090/
+		graphing interface - try:
+			rate(dm_http_requests_total{endpoint="readingdone",instance="localhost:8080",job="dm"}[2m])
+		command-line flags
+			storage location  -storage.local.path "data"
+			memory usage      -storage.local.memory-chunks 1048576
+			data retention    -storage.local.retention 360h0m0s
+		memory usage
+			dm is currently reporting 196 quantities per scrape
+			rules of thumb - 3 chunks per time series, total mem usage 3*1024*chunks
+			so could set chunks to 1024, which would use 3MB
+			for safety, make it 3413, which would result in total memory usage of 10 MB
+	grafana
+		cd /gstuff/grafana/grafana-4.2.0
+		./bin/grafana-server
+		manually set up dashboard
+		in upper-right corner, set display to 12 hrs and refresh to 1-min
+	grafana graphs
+		rate(dm_http_requests_total[2m])          {{endpoint}}  // multiply by 60 to get reqs/min
+		dm_http_request_client_latency_seconds    {{endpoint}}-{{quantile}}
+		dm_http_request_handler_latency_seconds   {{endpoint}}-{{quantile}}
+		100 - (irate(dm_cpu_idle_seconds[2m]) * 100)
+		100 * (dm_mem_total_bytes-dm_mem_available_bytes)/(dm_mem_total_bytes)
+	grafana singlestats
+		max(dm_http_request_client_latency_seconds)*1000
+		max(dm_http_request_client_latency_seconds)*1000
+		100 - (irate(dm_cpu_idle_seconds[2m]) * 100)
+		100 * (dm_mem_total_bytes-dm_mem_available_bytes)/(dm_mem_total_bytes)
+
+rate limiting
+	using throttled/throttled, as qctx middleware
+	throttled uses a GCRA ("generic cell rate algorithm"),
+		which us a species of "leaky bucket" algorithm
+	currently only rate-limiting login attempts and things that send emails
+	if we ever need more than that, probably should put a proxy in front
+	using an in-memory store, so everybody gets a clean slate on reboot
+
+security
+	SSL
+		got an A from ssllabs.com !
+		ssl arcana - blog.gopheracademy.com/advent-2016/exposing-go-on-the-internet/
+		using the autocert library to get LetsEncrypt certificates
+		run the serve, then visit https://delightmeditate.com
+			on first visit, a certificate will be obtained from LetsEncrypt.
+			do NOT visit WWW.delightmeditate.com until cert is installed.
+			cert for delightmeditate.com also works for www but not vice-versa.
+	HSTS (http strict transport security)
+		tells the browser never to issue non-SSL requests
+		a simple header you set on every response
+	XSS (cross-site scripting)
+		code injection, via:
+			form submission viewed by other users
+			emailing a URL containing malicious code
+			hacked JS libraries loaded from other sites
+			social engineering - convincing users to execute procedures they don't understand
+		in delight-meditate, no user ever sees anything from any other user
+		very few input items, all carefully validated at input
+		most rendering of user-generated input is via handlebars, which does escaping
+	CSP (content security policy)
+		set to:
+			default-src 'self'
+			- can't load ANY resources (scripts, images, etc.) from anywhere
+			- will not run ANY in-line scripts (like onclick()) or styles
+			- if scripts somehow leak into the DOM, they will not be executed
+			- the only way to attach scripts to the DOM is by executing my js
+		this is very restrictive and substantially increases resistance to XSS
+		see "index" middleware stack in main()
+		had to dump all inline js; replaced with ids to which js adds click handlers
+	CSRF (cross-site request forgery)
+		an unrelated page issues a POST to our server, which sees our valid session cookie
+		without mitigation, loading this page from another site executes a successful CSRF attack:
+			<!DOCTYPE html>
+			<html lang="en">
+				<head>
+				</head>
+				<body>
+					<form action="http://localhost:8080/actdel" method=POST enctype="text/plain">
+						<input name='{"plan":"mcheyne-2yr-2perday", "ignore_me":"' value='test"}'type='hidden'>  
+						<input type=submit>
+					</form>
+				</script>
+				</body>
+			</html>
+		most important endpoint that changes state is /userset,
+			and it requires the user's password EVERY TIME
+		"double-sent cookie" ("cookie to header") method - requires no server state
+			server sets a cookie to a random value
+			client-side javascript sets a custom request header to the same value
+			server verifies cookie and header match (proving JS is from same origin)
+		routes that send index.html get mwSetCSRF middleware
+		all other routes get mwCheckCSRF (which does nothing when Method == GET)
+	contact form
+		sent as text, my email readers just display tags, don't interpret
+
+email
+	go std library smtp code is simple and works well with mailgun
+
+backups
+	manual - visit dm-admin.html - makes a file named by date and time
+	automatic daily backup
+		- makes files named only by date, for prunedaily
+		- also maintains a directory containing only the latest daily, for rsyncing
+		- scripts running on a backup server rcps and saves daily backups and prunes with prunedaily
+
+deployment strategy
+	execution management
+		tried docker - clumsy flaky resource hog
+		running under systemd with hand-written ansible-style shell scripts
+			simple, quick, clean, and secure
+			can do a version upgrade with only a few seconds of downtime
+	graceful shutdown
+		systemd KillMode=mixed => SIGTERM, wait TimeoutStopSec, SIGKILL
+		use http.Server.Shutdown() to shut down gracefully
+	cloud host
+		XXX - document AWS setup
+		disk usage
+			/dm - persistent storage
+			/dm/prod - production container mounts this as /prod
+			/dm/test - test container mounts this as /test
+			/dm/shared - both containers mount this as /shared
+			/dm/shared/cert - contains SSL certs obtained from LetsEncrypt
+			=> run mkdirs.sh to make these and subdirs noted in config files
+	instances
+		dev
+			run server on development workstation
+			no ssl, invoke binary from src dir
+		test/prod
+			run both on the same server, listening to different ports
+			ssl, controlled by systemd
+			prod instance is responsible for obtaining certs from LetsEncrypt
+			test instance just uses certs obtained by prod instance (read-only directory)
+
+management
+	observe memory usage
+		my metrics in grafana show system-wide memory usage
+		could add process memory usage or just do:
+			ps -C dmprod -o sz,rss,args
+
+lnav
+	downloaded statically linked binary from github.com/tstack/lnav/releases
+	put the binary into /dm/bin/
+	ran it once, to create ~/.lnav/...
+	mkdir ~/.lnav/formats/dm
+	cp lnav-dm.json ~/.lnav/formats/dm/
+	TERM=xterm /dm/bin/lnav /dm/prod/log/dm.log
+
+grafana
+	install on an admin workstation as a systemd service, pointing to prometheus instance
+	must use access = proxy
+
+database backups
+	installed prunebck.service and prunebck.timer into /etc/systemd/system
+	installed prunedaily into /dm/bin
+	systemctl start prunebck.timer
+	on backup server - make dm-backups directory, dm-bck.sh, and daily crontab entry
+
+
+
+todo
+	bring up a production instance and update these notes accordingly
+	do a fresh install of JS dependencies, rebuild JS artifacts, and update these notes accordingly
+	help screen needs a paragraph on daily operation
+	change "about" page help button to "how it works"
+	review golang dependencies; see if can eliminate any; review version numbers
+	review JS dependencies; see if can eliminate any; review version numbers
+	factor out JS SPA code into a separate module
+	move all static files to a CDN
+	MAYBE switch to a new transactional email host
+	MAYBE convert docstore/docqueries to the go embed package
+	automate the management of version numbers in build-fe.sh, Makefile, index.html, and base.toml
+	undo ip tables changes for survey demo (see below)
+	run ESLint on JS code
+
+

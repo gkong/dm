@@ -1,0 +1,76 @@
+# Copyright 2017 George S. Kong. All rights reserved.
+# Use of this source code is governed by a license that can be found in the LICENSE.txt file.
+
+# configurable parameters that are the same for the dev, test, and prod instances
+
+clientVersion = "b17"            # CAREFUL! keep in sync with index.html dmClientVersion
+
+clientVersionReqHdr = "Dm-Client-Version"
+clientUpdateReqHdr = "Dm-Client-Update"
+
+HTTPReadTimeoutSecs = 5
+HTTPWriteTimeoutSecs = 10
+HTTPIdleTimeoutSecs = 120
+
+emailServer = "smtp.mailgun.org"
+emailPort = "587"
+
+dailyBackupTime = 25200         # 7AM in secs since midnight UTC (ranges from 11PM PDT to 3AM EST-DST)
+
+alertEmailIntervalSecs = 21600  # 6 hrs - only bother me once per interval, reset if admin visits /alertreset
+alertEmailMsgError = "ALERT - ERROR from Delight/Meditate"
+alertEmailMsgPanic = "ALERT - PANIC from Delight/Meditate"
+
+verifLimitPerMin = 4            # rate limit PER IP+PORT for emailed verifs - signup and pwrecover
+verifLimitBurst = 4
+loginLimitPerMin = 5            # rate limit PER IP+PORT for login attempts
+loginLimitBurst = 5
+contactLimitPerDay = 3          # rate limit PER USER for contact form submission
+contactLimitBurst = 2
+notfoundLimitPerMin = 4         # rate limit PER IP+PORT for URL not found (to discourage excessive crawling)
+notfoundLimitBurst = 4
+
+bcryptCost = 9
+
+docTTL = 5184000                # 60 days
+docQueriesTTL = 43200           # 12 hrs
+
+defaultBibleVersion = "ESV"
+defaultBibleProvider = "BibleGateway.com-PRINT"
+
+sysProc = "/proc"
+
+# Lumberjack filename: see logDest above
+LumberjackMaxSize = 200         # megabytes
+LumberjackMaxBackups = 5
+LumberjackMaxAge = 60           # days
+
+csrfCookieName = "dm_csrf"      # must be the same on client and server
+csrfHeader = "Dm-Csrf"          # must be the same on client and server
+csrfRandLen = 10                # size of random data (before base64 encode)
+# csrf token expiration should never trump session expiration
+csrfMaxAgeSecs = 2592000        # = qslogin LONG MaxAgeSecs
+csrfMinRefreshSecs = 1800       # = qslogin SHORT MinRefreshSecs
+
+[qsLogin]
+authType = "cookie"
+cookieName = "dm_session"
+maxAgeSecs = 7200               # 2 hours
+minRefreshSecs = 1800
+longMaxAgeSecs = 2592000        # 30 days
+longMinRefreshSecs = 648000
+
+[qsVerify]
+authType = "token"              # must be token; it has to travel by email
+maxAgeSecs = 3600               # 1 hour
+minRefreshSecs = 900
+
+[qsEmail]
+authType = "token"              # must be token; it has to travel by email
+maxAgeSecs = 3600               # 1 hour
+minRefreshSecs = 900
+
+[qsRecovery]
+authType = "token"              # must be token; it has to travel by email
+maxAgeSecs = 3600               # 1 hour
+minRefreshSecs = 900

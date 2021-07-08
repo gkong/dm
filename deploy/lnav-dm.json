@@ -1,0 +1,70 @@
+{
+    "dm" : {
+        "title" : "Delight/Meditate",
+        "description" : "Delight/Meditate web server log",
+	"file-pattern": "dm.*.log",
+        "convert-to-local-time" : true,
+        "json" : true,
+	"line-format" : [
+		{ "field": "ts" },
+		" ", { "field": "level" },
+		"  ", { "field": "msg" },
+		"  ", { "field": "ip", "default-value": "" },
+		" ", { "field": "latencyus", "default-value": "" },
+		" ", { "field": "status", "default-value": "" },
+		" ", { "field": "method", "default-value": "" },
+		" ", { "field": "path", "default-value": "" },
+		" ", { "field": "referer", "default-value": "" },
+		" ", { "field": "user", "default-value": "" },
+		" ", { "field": "error", "default-value": "" }
+	],
+	"body-field" : "msg",
+	"timestamp-field": "ts",
+	"level-field": "level",
+	"hide-extra": true,
+        "level" : {
+            "info" : "info",
+            "error" : "error",
+            "critical" : "panic",
+            "debug" : "debug",
+            "fatal" : "fatal",
+            "warning" : "warn"
+        },
+	"value": {
+		"level" : {
+			"kind": "string"
+		},
+		"msg" : {
+			"kind": "string"
+		},
+		"ip" : {
+			"kind": "string"
+		},
+		"latencyus" : {
+			"kind": "integer"
+		},
+		"status" : {
+			"kind": "integer",
+			"identifier": true
+		},
+		"method" : {
+			"kind": "string",
+			"identifier": true
+		},
+		"referer" : {
+			"kind": "string",
+			"identifier": true
+		},
+		"path" : {
+			"kind": "string"
+		},
+		"user" : {
+			"kind": "string"
+		},
+		"error" : {
+			"kind": "string"
+		}
+	}
+    }
+}
+

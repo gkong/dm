@@ -1,0 +1,28 @@
+<div class="dm-panel" id="dm-profile-panel">
+	<div class="dm-title">User Profile</div>
+	<p>
+		The Bible provider and version code will apply to any plans you add in the future.
+		For help choosing them, choose "Help" from the menu above.
+	</p>
+	<form class="add-border dm-number-form">
+		<div class="dm-vspacer"></div>
+		<div class="form-group">
+			<label for="oldPass">current password (required)</label>
+			<input id="oldPass" class="form-control" type="password" name="pass789" />
+		</div>
+		<div class="dm-vspacer"></div>
+		<div class="form-group">
+			<label for="newPass">new password (optional)</label>
+			<input id="newPass" class="form-control" type="password" name="pass456" />
+		</div>
+		<div class="dm-vspacer"></div>
+		{{> signupPartial}}
+		{{> versionPartial}}
+		<div id="profile-alert" class="alert alert-danger"></div>
+		<button type="button" class="btn btn-primary" id="dm-user-profile">Update</button>
+		<div class="dm-vspacer"></div>
+		<button type="button" class="btn btn-primary" id="dm-profile-cancel">Cancel</button>
+	</form>
+	<div class="dm-vspacer"></div>
+	<div class="dm-vspacer"></div>
+</div>

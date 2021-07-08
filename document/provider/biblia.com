@@ -1,0 +1,1 @@
+https://biblia.com/bible/{{version}}/{{citation}}

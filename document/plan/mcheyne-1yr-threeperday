@@ -1,0 +1,8 @@
+{"title":"M'Cheyne 1-Year (3/day)",
+"desc":"This plan removes the fourth daily reading from the M'Cheyne plan, thus covering all of the Bible once in a year.",
+"days": 365,
+"streams":[
+"mcheyne-otnopsalms-1sthalf-365",
+"mcheyne-ntpsalms-family-365",
+"mcheyne-otnopsalms-2ndhalf-365"
+]}

@@ -1,0 +1,20 @@
+[Unit]
+Description=delight-meditate TEST server
+Requires=dm.mount
+
+[Service]
+Restart=always
+RestartSec=5
+KillMode=mixed
+KillSignal=SIGINT
+SendSIGKILL=yes
+TimeoutStopSec=60
+User=core
+Group=core
+WorkingDirectory=/dm/test/app
+ReadOnlyDirectories=/
+ReadWriteDirectories=/dm/test 
+ExecStart=/dm/test/app/dmtest config/base.toml config/test.toml config/secret.toml
+
+[Install]
+WantedBy=multi-user.target

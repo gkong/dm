@@ -1,0 +1,9 @@
+{"title":"M'Cheyne 1-Year (4/day)",
+"desc":"This popular plan covers the New Testament and Psalms twice and the rest of the Bible once in a year, with four readings per day. It was originally published by Robert Murray M'Cheyne, a minister in the Church of Scotland, in 1842, and was revised slightly by D. A. Carson in 1998.",
+"days": 365,
+"streams":[
+"mcheyne-otnopsalms-1sthalf-365",
+"mcheyne-ntpsalms-family-365",
+"mcheyne-otnopsalms-2ndhalf-365",
+"mcheyne-ntpsalms-private-365"
+]}

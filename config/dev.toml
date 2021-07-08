@@ -1,0 +1,22 @@
+# Copyright 2017 George S. Kong. All rights reserved.
+# Use of this source code is governed by a license that can be found in the LICENSE.txt file.
+
+debugPanicStack = true          # log stack trace on panic
+debugEmail = true               # log instead of emailing verifications and alerts
+logAllHTTP = true               # log all HTTP requests
+
+TCPAddr = ":8080"
+SSL = false
+SSLTCPAddr = ""
+SSLCertDir = ""
+
+qsessCookieSecure = false
+csrfCookieSecure = false
+
+staticDir = "./static"
+docDir = "./document"
+
+dbDir = "/var/lib/dm/db"
+bckDir = "/var/lib/dm/bck"
+bckLatestDir = "/var/lib/dm/bcklatest"
+logDest = "/var/log/dm/dm.log"  # either "stdout" or full pathname of log file (to be rotated by lumberjack)

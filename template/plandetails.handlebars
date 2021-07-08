@@ -1,0 +1,15 @@
+<div class="dm-panel">
+	<div class="dm-title">{{title}}</div>
+	{{days}} days
+	{{#each rows}}
+		<hr/>
+		<span class="dm-details-day">{{day}}</span>
+		{{#each readings}}
+			- {{this}}
+		{{/each}}
+	{{/each}}
+	<div class="dm-vspacer"></div>
+	<button type="button" class="btn btn-primary" id="dm-plandetails-ok">OK</button>
+	<div class="dm-vspacer"></div>
+	<div class="dm-vspacer"></div>
+</div>

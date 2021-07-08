@@ -1,0 +1,13 @@
+[Unit]
+Description=prometheus under docker
+
+[Service]
+Restart=always
+RestartSec=3
+WorkingDirectory=/prometheus-data
+ExecStart=/usr/bin/docker run --name=promgsk -u 1000 -p 127.0.0.1:9090:9090 -v /prometheus-data:/prometheus-data prom/prometheus -config.file=/prometheus-data/prometheus.yml -storage.local.path=/prometheus-data/data -storage.local.retention=720h0m0s
+ExecStop=/usr/bin/docker stop promgsk
+ExecStopPost=/usr/bin/docker rm -f promgsk
+
+[Install]
+WantedBy=multi-user.target

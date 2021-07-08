@@ -1,0 +1,20 @@
+<div class="dm-panel" id="dm-planday-panel">
+	<div class="dm-title">Jump to a Specific Day</div>
+	<p>
+		You are currently on day {{day}} of {{totaldays}} for plan <b>{{plantitle}}.</b>
+	</p>
+	<form class="add-border dm-number-form">
+		<div class="form-group">
+			<label for="pdfDay">new day number</label>
+			<input id="pdfDay" class="form-control" "type="number" />
+		</div>
+		<div id="planday-alert" class="alert alert-danger"></div>
+		<button type="button" class="btn btn-primary dm-planday" id="dm-planday-{{plan}}">Jump to this day</button>
+		<div class="dm-vspacer"></div>
+		<button type="button" class="btn btn-primary dm-plandet" id="dm-plandet-{{plan}}">See plan details</button>
+		<div class="dm-vspacer"></div>
+		<button type="button" class="btn btn-primary" id="dm-planday-cancel">Cancel</button>
+	</form>
+	<div class="dm-vspacer"></div>
+	<div class="dm-vspacer"></div>
+</div>

@@ -1,0 +1,98 @@
+<div id="dm-home-visible"></div>
+{{#each activities}}
+	{{#if @index}}
+		<div class="dm-vspacer"></div>
+	{{/if}}
+	<div class="dm-plan dm-panel-fixed {{ontrack}}">
+		<div class="dm-header">{{plantitle}}</div>
+		<div class="dropdown dm-hamburger-container">
+			<a class="dropdown-toggle dm-dropdown-no-triangle" href="" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				<div class="dm-hamburger"></div>	
+			</a>
+			<div class="dropdown-menu dropdown-menu-right dm-home-testdrive-dropdown" aria-labelledby="dropdownMenuLink">
+				<a class="dropdown-item">[ menu disabled during test drive ]</a>
+			</div>
+			<div class="dropdown-menu dropdown-menu-right dm-home-plan-dropdown" aria-labelledby="dropdownMenuLink">
+				<a class="dropdown-item" href="/c/plandetails/{{plan}}">Plan Details</a>
+				<a class="dropdown-item" href="/c/planday/{{plan}}">Jump to a Specific Day</a>
+				<a class="dropdown-item dm-acctoggle" id="dm-acctoggle-{{plan}}">{{showduedate}}</a>
+				<a class="dropdown-item dm-accreset {{armenuhide}}" id="dm-accreset-{{plan}}">Reset Due Dates</a>
+				<a class="dropdown-item" href="/c/version/{{plan}}">Change Bible Version</a>
+				<a class="dropdown-item dm-delplan" id="dm-delplan-{{plan}}">Delete This Plan</a>
+			</div>
+		</div>
+		<div class="dm-status {{statusgone}}">{{status}}</div>
+		{{#each readings}}
+			<div class="dm-vspacer"></div>
+
+			<div class="dm-temporal-context">
+				<div class="dm-tctx-left" id="dm-tctx-L-{{actindex}}-{{streamindex}}">{{tctxl}}</div><!--
+				--><div class="dm-tctx-right" id="dm-tctx-R-{{actindex}}-{{streamindex}}">{{tctxr}}</div>
+			</div>
+
+			<div class="dm-row">
+				<div class="dm-col dm-move-left dm-move" id="dm-L-{{actindex}}-{{streamindex}}-{{plandays}}">
+					<div class="vcenter-container">
+						<div class="vcenter dm-line-height-hack">
+							<svg>
+								<polygon class="{{ltriangle}}" points="16 0 0 25 16 50">
+							</svg>
+						</div>
+					</div>
+				</div><!--
+				--><div class="dm-col dm-citation" id="dm-cit-{{citurlindex}}">
+					<div class="vcenter-container dm-cit-left" id="dm-cit-L-{{actindex}}-{{streamindex}}">
+						<div class="vcenter">{{{citleft}}}</div>
+					</div><!--
+					--><div class="vcenter-container dm-cit-right dm-noclick" id="dm-cit-R-{{actindex}}-{{streamindex}}">
+						<div class="vcenter">{{{citright}}}</div>
+					</div>
+				</div><!--
+				--><div class="dm-col dm-move-right dm-move" id="dm-R-{{actindex}}-{{streamindex}}-{{plandays}}">
+					<div class="vcenter-container">
+						<div class="vcenter dm-line-height-hack">
+							<svg>
+								<polygon class="{{rtriangle}}" points="0 0 16 25 0 50">
+							</svg>
+						</div>
+					</div>
+				</div>
+			</div>
+		{{/each}}
+		<div id="dm-testdrive" class="dm-gone">
+			<div class="dm-vspacer"></div>
+			<div id="dm-testdrive-msg-1" class="alert alert-warning">
+				<b>TEST DRIVE</b>
+				<br/>
+				1. Click one of the Bible references above to view a reading in a new browser tab.
+				<br/>
+				2. After finishing the reading, close its tab.
+				<br/>
+				3. Click the right-pointing arrow next to the reading, to advance to the next day's reading.
+			</div>
+			<div id="dm-testdrive-msg-2" class="alert alert-warning">
+				<b>TEST DRIVE</b>
+				<br/><br/>
+				You have completed a reading!
+				<br/><br/>
+				When you are logged in, the app remembers where you are,
+				based on your arrow clicks.
+				<br/><br/>
+				Now read the other reading for today and click its right-pointing arrow.
+ 			</div>
+			<div id="dm-testdrive-msg-3" class="alert alert-warning">
+				<b>TEST DRIVE</b>
+				<br/><br/>
+				You have completed today's readings.
+				The green background indicates there is nothing more due today.
+				<br/><br/>
+				This completes the test drive.
+				You can try clicking the arrows some more,
+				to become more familiar with the app.
+				<div class="dm-vspacer"></div>
+				<button type="button" class="btn btn-primary" id="dm-testdrive-ok">OK</button>
+ 			</div>
+ 		</div>
+		<div class="dm-footer">{{daysleft}} days left</div>
+	</div>
+{{/each}}

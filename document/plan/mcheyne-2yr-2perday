@@ -1,0 +1,7 @@
+{"title":"M'Cheyne 2-Year (2/day)",
+"desc":"This version of the M'Cheyne plan requires only two readings per day, covering the New Testament and Psalms twice and the rest of the Bible once in two years.",
+"days": 730,
+"streams":[
+"mcheyne-otnopsalms-all-730",
+"mcheyne-ntpsalms-family-then-private-730"
+]}

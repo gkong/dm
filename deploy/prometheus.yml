@@ -1,0 +1,33 @@
+# my global config
+global:
+  scrape_interval:     1m # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 1m # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+      monitor: 'gsk'
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first.rules"
+  # - "second.rules"
+
+scrape_configs:
+
+  - job_name: 'dm'
+
+    scrape_interval:     1m
+
+    basic_auth:
+        username: 'mV2Sw4BFsAfDcZhe'
+        password: 'AZDDhwc2Yhdsn8NEK9VfeuaGRiZNsEwaJH9s'
+
+    scheme: https
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+    static_configs:
+      - targets: ['www.delightmeditate.com']
+

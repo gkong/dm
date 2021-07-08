@@ -1,0 +1,20 @@
+{
+  "name": "delight-meditate",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dm.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^4.0.0-alpha.6",
+    "es6-promise": "^4.1.0",
+    "handlebars": "^4.0.6",
+    "jquery": "^3.1.1",
+    "rlite-router": "^2.0.1",
+    "tether": "^1.4.0"
+  }
+}

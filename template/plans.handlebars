@@ -1,0 +1,21 @@
+<div class="dm-panel">
+	<div class="dm-title">Available Plans</div>
+	{{#each plandescs}}
+		<div class="dm-vspacer"></div>
+		<div class="dm-small-title">{{title}}</div>
+		{{desc}}
+		<div class="dm-vspacer"></div>
+		<div class="dm-plans-button-container">
+			<button type="button" class="btn btn-primary dm-plan-details-button" id="dm-pdb-{{name}}">See plan details</button>
+		</div>
+		<div id="pb-{{name}}" class="dm-plans-button-container dm-plan-add-button">
+			<button type="button" class="btn btn-primary" id="dm-addplan-{{name}}">Add this plan</button>
+		</div>
+		<div class="dm-plans-button-container dm-plan-login-button dm-gone">
+			<button type="button" class="btn btn-primary">Log in to add this plan</button>
+		</div>
+		<div class="dm-vspacer"></div>
+		<hr/>
+	{{/each}}
+	<div class="dm-vspacer"></div>
+</div>

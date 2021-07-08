@@ -1,0 +1,4 @@
+
+v0.0.0 - 2021-07-08
+
+This is a revival of a project written several years ago, run in small production for a couple of years, and then left on hiatus for a couple of years. It currently has been verified to run locally, but has not yet been put back into production, nor have the JavaScript artifacts been rebuilt since the hiatus.

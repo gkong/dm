@@ -1,0 +1,8 @@
+[Unit]
+Description=run prunebck daily at 6AM UTC - ranges from 10PM PDT to 2AM EST-DST
+
+[Timer]
+OnCalendar=*-*-* 06:00:00 UTC
+
+[Install]
+WantedBy=multi-user.target

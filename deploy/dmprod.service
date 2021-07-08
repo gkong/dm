@@ -1,0 +1,19 @@
+[Unit]
+Description=delight-meditate production server
+Requires=dm.mount
+
+[Service]
+Restart=always
+RestartSec=5
+KillMode=mixed
+KillSignal=SIGINT
+SendSIGKILL=yes
+TimeoutStopSec=60
+User=core
+Group=core
+WorkingDirectory=/dm/prod/app
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+ExecStart=/dm/prod/app/dmprod config/base.toml config/prod.toml config/secret.toml
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+<div class="dm-panel" id="dm-version-panel">
+	<div class="dm-title">Bible Version</div>
+	<p>
+		Choose a provider and version code for plan <b>{{plantitle}}.</b>
+		The default choices are provider <b>BibleGateway.com-PRINT</b> and version code <b>ESV</b>.
+		For more information, choose "Help" from the menu above.
+	</p>
+	<form class="add-border dm-number-form">
+		{{> versionPartial}}
+		<div id="version-alert" class="alert alert-danger"></div>
+		<button type="button" class="btn btn-primary dm-newver" id="dm-newver-{{plan}}">Update</button>
+		<div class="dm-vspacer"></div>
+		<button type="button" class="btn btn-primary" id="dm-newver-cancel">Cancel</button>
+	</form>
+	<div class="dm-vspacer"></div>
+	<div class="dm-vspacer"></div>
+</div>

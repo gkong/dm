@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link href="/static/bootstrap_4.0.0-alpha.6.min.css" rel="stylesheet">
+	<link href="/static/dm.css" rel="stylesheet">
+  </head>
+  <body>
+	<div class="container">
+		<div id="dm-navbar"></div>
+		<div class="dm-vspacer"></div>
+
+		<div class="dm-panel">
+			<div class="dm-title">Admin</div>
+			<form class="add-border dm-number-form">
+				<div class="form-group">
+					<label for="adminCmd">command</label>
+					<input id="adminCmd" class="form-control" type="text" name="acmd123"/>
+				</div>
+				<div class="form-group">
+					<label for="adminArg">arg</label>
+					<input id="adminArg" class="form-control" type="text"  name="aarg123"/>
+				</div>
+				<div id="admin-alert" class="alert alert-danger"></div>
+				<button type="button" class="btn btn-primary" id="dm-admin-cmd">Execute</button>
+				<div class="dm-vspacer"></div>
+				<div id="admin-alert-ok" class="alert alert-success">OK</div>
+			</form>
+
+			<div class="dm-vspacer"></div>
+			<div class="dm-vspacer"></div>
+			<div id="admin-response-body"></div>
+			<div class="dm-vspacer"></div>
+		</div>
+
+	</div>
+	<script src="/static/dmdeps.js"></script>
+	<script src="/static/dmadmin.js"></script>
+  </body>
+</html>

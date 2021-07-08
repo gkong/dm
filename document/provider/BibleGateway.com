@@ -1,0 +1,1 @@
+https://biblegateway.com/passage/?version={{version}}&search={{citation}}

@@ -1,0 +1,6 @@
+[Unit]
+Description=prune dm database backups
+
+[Service]
+Type=oneshot
+ExecStart=/dm/bin/prunedaily /dm/prod/bck
