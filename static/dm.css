@@ -50,6 +50,20 @@ hr {
 	border-radius: 10px;
 }
 
+.nav-item {
+	text-align: right;
+}
+
+#nav-user-dropdown .dropdown-menu {
+	background-color: transparent;
+	border-style: none;
+}
+
+#nav-user-dropdown .dropdown-item {
+	text-align: right;
+	font-size: 120%;
+}
+
 .dm-gone {
 	display: none;
 }

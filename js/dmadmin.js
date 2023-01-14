@@ -5,8 +5,6 @@
  */
 
 jQuery = $ = require('jquery');
-var Promise = require('es6-promise').Promise;
-Tether = require('tether');
 require('bootstrap');
 
 window.admincmd = admincmd;

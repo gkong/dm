@@ -12,14 +12,21 @@ if [ "$curdir" != "$mustdir" ] ; then
 	exit
 fi
 
+if [ "$DM_PROD_SECRETS_TOML" = "" -o ! -f "$DM_PROD_SECRETS_TOML" -o ! -r "$DM_PROD_SECRETS_TOML" ] ; then
+	echo need environment variable DM_PROD_SECRETS_TOML - path to a secrets file similar to config/example-secrets.toml
+	exit
+else
+	echo using secrets file "$DM_PROD_SECRETS_TOML"
+fi
+
+targs="-P --transform=s|$DM_PROD_SECRETS_TOML|config/secret.toml|"
+
 exe=dm
 target=dmprod
 destdir=./artifacts
 
 rm $exe
-
 CGO_ENABLED=0 go build
-
 mv $exe $target
-tar -c $target static document index.html dm-admin.html config/base.toml config/secret.toml config/prod.toml | gzip > "$destdir"/"$target".tgz
+tar $targs -c $target static document index.html dm-admin.html config/base.toml config/prod.toml "$DM_PROD_SECRETS_TOML" | gzip > "$destdir"/"$target".tgz
 mv $target $exe

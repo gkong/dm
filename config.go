@@ -33,6 +33,7 @@ type tomlConfig struct {
 	MetricsPassword string
 
 	EmailSender   string
+	EmailUserName string
 	EmailPassword string
 
 	QsessKeys []string // a separate key for each qsess store would allow independent key rotation intervals...
@@ -68,10 +69,6 @@ type tomlConfig struct {
 
 	ClientVersionReqHdr string
 	ClientUpdateReqHdr  string
-
-	HTTPReadTimeoutSecs  int
-	HTTPWriteTimeoutSecs int
-	HTTPIdleTimeoutSecs  int
 
 	EmailServer string
 	EmailPort   string

@@ -5,6 +5,8 @@
 
 # run this on production server, to make directories
 
+mkdir /dm
+
 cd /dm
 
 mkdir -m 755 active bin incoming prod shared shared/cert test tmp

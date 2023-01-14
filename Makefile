@@ -4,9 +4,9 @@
 
 # leave non-versioned, non-minified versions in static, for the benefit of dm-admin.html
 
-# version numbers to be incremented
-dmt = dmt-v17
-css = dm-v10
+# change version numbers here, AND IN index.html, to force clients to reload
+dmt = dmt-v18
+css = dm-v11
 
 # this Makefile must reside in the parent of "template", "js", "css", and "static".
 # set basedir to the full pathname of the directory in which this Makefile resides.
@@ -30,11 +30,10 @@ $(static)/dm.css: $(cssdir)/dm.css
 	cp $< $@
 
 $(static)/$(css).min.css: $(cssdir)/dm.css
-	cssnano < $< > $@
+	npx postcss $< > $@
 
 $(static)/dmt.js: $(tdir)/*.handlebars
 	handlebars $(tdir) -f $@ -k each -k if -k unless
 
 $(static)/$(dmt).min.js: $(static)/dmt.js
-	-terser $< --lint --compress warnings=false --mangle --comments --output $@
-
+	terser $< --lint --compress warnings=false --mangle --comments --output $@

@@ -8,8 +8,6 @@ require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof requ
 jQuery = $ = require('jquery');
 var Rlite = require('rlite-router');
 Handlebars = require('handlebars/runtime');  // put into global scope, so dmt.js can see it
-var Promise = require('es6-promise').Promise;
-Tether = require('tether');                  // required by bootstrap
 require('bootstrap');
 
 
@@ -19,7 +17,6 @@ var clientVersion;          // client version string read from DOM (defined in i
 var clientUpdateRequested;  // reload client as soon as it can be done gracefully
 var dialogPage;             // short alias for Handlebars.templates.dialog function
 
-// const tdkey = "dmTestdriveState";  // localStorage key for saving testdrive state
 const lrkey = "dmLastReload";      // localStorage key for last reload time, in secs since 1970
 
 $(function() {
@@ -401,7 +398,6 @@ function loginPage() {
 	$('#login-alert').hide();
 	$('#dm-about-button').click(function() { spaVisit('/c/about'); });
 	$('#dm-test-drive-button').click(function() {
-//		localStorage.removeItem(tdkey);
 		spaVisit('/c/testdrive');
 	});
 	$('#dm-login-button').click(function() { login(); });
@@ -444,7 +440,6 @@ function aboutPage() {
 		$('.dm-visitor-only').addClass("dm-gone");
 	} else {
 		$('#dm-test-drive-button').click(function() {
-//			localStorage.removeItem(tdkey);
 			spaVisit('/c/testdrive');
 		});
 	}
@@ -1717,4 +1712,4 @@ function spaSameOrigin(href) {
 	return (href && (0 === href.indexOf(origin)));
 }
 
-},{"bootstrap":3,"es6-promise":4,"handlebars/runtime":23,"jquery":24,"rlite-router":25,"tether":26}]},{},[1]);
+},{"bootstrap":3,"handlebars/runtime":4,"jquery":25,"rlite-router":27}]},{},[1]);

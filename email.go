@@ -57,7 +57,7 @@ func sendTextAndHTMLEmail(recipient string, subject string, textbody string, htm
 
 func sendEmail(recipient string, msg []byte) error {
 	to := []string{recipient}
-	auth := smtp.PlainAuth("", Config.EmailSender, Config.EmailPassword, Config.EmailServer)
+	auth := smtp.PlainAuth("", Config.EmailUserName, Config.EmailPassword, Config.EmailServer)
 	sp := Config.EmailServer + ":" + Config.EmailPort
 	return smtp.SendMail(sp, auth, Config.EmailSender, to, msg)
 }

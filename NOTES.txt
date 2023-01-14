@@ -2,7 +2,29 @@
 Delight-Meditate design and deployment notes
 
 
-configuration
+environment
+	golang - visit https://go.dev and follow instructions to install the latest version of go
+	front end tool installation
+		nvm - visit https://github.com/nvm-sh/nvm and follow installation instructions (puts stuff into ~/.nvm)
+		node - nvm install --lts
+			(npm comes with node and puts stuff into ~/.npm)
+		npm install -g browserify
+		npm install factor-bundle
+		npm install -g handlebars
+		npm install -g terser
+		cssnano - instructions from cssnano.co
+			npm install cssnano postcss --save-dev
+			npm install --save-dev postcss-cli
+		in everyday build workflow, use of all these tools is contained in Makefile and build-fe.sh
+	package.json and local node_modules are in the js directory.
+	dependency installation
+		npm install jquery
+		npm install bootstrap@^4.x.x
+		npm install rlite-router  # added 1 package!
+		npm install handlebars
+
+
+configuration and secrets
 	[this can all be skipped if you just want to try the server by running it locally]
 	overview
 		config files are TOML format
@@ -31,7 +53,7 @@ configuration
 		production instance - ports 80/443
 
 
-procedures for building, testing, and deploying
+building, testing, and deploying
 	if any client files have been modified
 		manually change appropriate file versions in:
 			build-fe.sh
@@ -55,19 +77,20 @@ procedures for building, testing, and deploying
 			chmod 755 /var/lib/dm /var/log/dm
 		to run:
 			go build
-			# if env var DM_DEV_SECRETS_TOML is not set, config/example-secrets.toml is used
-			./run.sh
+			DM_DEV_SECRETS_TOML=yourDevSecretsFileFullPathname ./run.sh  # see config/example-secrets.toml
 			visit http://localhost:8080
 		account creation
 			email verification just writes a token to the log, rather than emailing.
 			cut and append it to http://localhost:8080/verify/
 		after making changes, clear browser cache and storage, rather than spinning client version
+	see the "server setup" section below before proceeding here
 	deploy to test instance
-		./build-test.sh
+		DM_TEST_SECRETS_TOML=yourTestSecretsFileFullPathname ./build-test.sh
 		./deploy-test.sh
 	deploy to production instance
-		./build-prod.sh
+		DM_PROD_SECRETS_TOML=yourProductionSecretsFileFullPathname ./build-prod.sh
 		./deploy-prod.sh
+
 
 project organization
 	golang
@@ -84,21 +107,18 @@ project organization
 
 database
 	goleveldb is compiled into the server binary; no external database is required
-	goleveldeb is single-user - can scale up but not out
+	goleveldeb is single-user - can scale up (many cores on a single server) but not out
 	embedded goleveldb is very fast - can scale up substantially
 	replacing the database would not be hard - all database-specific code is in:
 		schema - gen/schema.go
 		code - dbops.go
-	this code works directly with goleveldb, which is a key/value store
-	porting to any other database should be easy
-		would port directly to any key/value store
-		porting to a database with tables, indices, etc. would be a great simplification
+	since goleveldb is a key/value store, porting to any other database should be easy
 
 front-end
 	single-page app benefits - lower user-perceived latency, reduced server load
 	URL schema and handling is described in a comment at the top of main.go.
 	client-side routing, history and scroll state
-		rlite - tiny router, just maps urls to functions, with path parameters
+		rlite-router - tiny router, just maps urls to functions, with path parameters
 		my spa code for history and scroll management
 			(borrows from page.js and brigade/delayed-scroll-restoration-polyfill)
 	page navigation
@@ -157,15 +177,10 @@ graphic design
 	narrow hamburger (see CSS gradients):
 		webdesign.tutsplus.com/tutorials/7-non-raster-approaches-for-making-the-hamburger-menu-icon--cms-21686
 
-front-end module management
-	XXX - add instructions here for installing npm, browserify, uglify, cssnano, handlebars, etc.
-	in everyday build workflow, use of all these tools is contained in Makefile and build-fe.sh
-	package.json and local node_modules are in the js directory.
-
 back end overview and dependencies
 	monolithic golang application server with no comprehensive back-end framework
-	can scale up but not out without switching to a different database
 	database - goleveldb compiled into the server binary
+	can scale up but not out without switching to a different database
 	web server - go standard library, compiled into the server binary
 	SSL cert generation - golang.org/x/crypto/acme/autocert
 	sessions - 	github.com/gkong/go-qweb/qsess
@@ -175,24 +190,22 @@ back end overview and dependencies
 	logging - JSON-formatted lines written to stdout by uber zap, view locally with lnav
 	metrics - prometheus golang client exposes via http, external prometheus instance scrapes, view with grafana
 	request throttling - github.com/throttled/throttled/v2
-	transactional email - mailgun via go std library smtp code
+	transactional email - any service that supports SMTP, configurable in *secrets.toml
 
-server setup - XXX - this section needs to be re-written after bringing up a new production server
+server setup
+	launch a virtual private server, running ubuntu
 	DNS
-		make A records for www and @ for delightmeditate.com
-	firewall
-		coreos-config.yaml saves an iptables rule set and enables the iptables-restore service
-		to see what's currently active - sudo iptables -nvL
+		make A records for www and @ pointing to the new server
 	directory structure
-		copy deploy/mkdirs.sh to the target and run it
+		rcp deploy/mkdirs.sh to the server and run it
+		chown -R ubuntu:ubuntu /dm
 	systemd
-		install dmprod.service into /etc/systemd/system
-		install dmtest.service into /etc/systemd/system
+		install dmtest.service dmprod.service into /etc/systemd/system
 			=> restrict test instance write permissions, so don't fight over SSL cert maintenance
-		systemctl enable dmtest
-		systemctl enable dmprod
-		systemctl start dmtest
-		systemctl start dmprod
+		systemctl enable dmtest  # will fail until first dm deployment
+		systemctl enable dmprod  # will fail until first dm deployment
+	deploy dm to the server following instructions above
+		the deployment scripts will tell systemd to start the test and production servers
 	for debugging manually-invoked web servers
 		sudo setcap 'cap_net_bind_service=+eip' executable-name
 	administration via systemctl (systemd)
@@ -374,7 +387,7 @@ security
 		sent as text, my email readers just display tags, don't interpret
 
 email
-	go std library smtp code is simple and works well with mailgun
+	go std library SMTP code is simple and works well with any service that uses SMTP
 
 backups
 	manual - visit dm-admin.html - makes a file named by date and time
@@ -393,7 +406,7 @@ deployment strategy
 		systemd KillMode=mixed => SIGTERM, wait TimeoutStopSec, SIGKILL
 		use http.Server.Shutdown() to shut down gracefully
 	cloud host
-		XXX - document AWS setup
+		currently running on an AWS EC2 instance running ubuntu server
 		disk usage
 			/dm - persistent storage
 			/dm/prod - production container mounts this as /prod
@@ -409,7 +422,7 @@ deployment strategy
 			run both on the same server, listening to different ports
 			ssl, controlled by systemd
 			prod instance is responsible for obtaining certs from LetsEncrypt
-			test instance just uses certs obtained by prod instance (read-only directory)
+			test instance just uses certs obtained by prod instance (cert directory is read-only)
 
 management
 	observe memory usage
@@ -436,20 +449,17 @@ database backups
 	on backup server - make dm-backups directory, dm-bck.sh, and daily crontab entry
 
 
+------------------------------------------------------------------------
+
 
 todo
-	bring up a production instance and update these notes accordingly
-	do a fresh install of JS dependencies, rebuild JS artifacts, and update these notes accordingly
+	update all JS dependencies, rebuild JS artifacts
 	help screen needs a paragraph on daily operation
 	change "about" page help button to "how it works"
-	review golang dependencies; see if can eliminate any; review version numbers
-	review JS dependencies; see if can eliminate any; review version numbers
 	factor out JS SPA code into a separate module
+	convert docstore/docqueries to the go embed package
+	review golang dependencies, including JSON code gen; see if can eliminate any
+	eliminate handlebars; use JS templates
 	move all static files to a CDN
-	MAYBE switch to a new transactional email host
-	MAYBE convert docstore/docqueries to the go embed package
 	automate the management of version numbers in build-fe.sh, Makefile, index.html, and base.toml
-	undo ip tables changes for survey demo (see below)
 	run ESLint on JS code
-
-

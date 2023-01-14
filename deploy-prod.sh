@@ -3,6 +3,8 @@
 # Copyright 2017 George S. Kong. All rights reserved.
 # Use of this source code is governed by a license that can be found in the LICENSE.txt file.
 
+# you must have "dm" defined in your ssh configuration
+
 # assumes dmprod.service has been installed on production server.
 
 # this script must be in the project root directory and must be issued from there.

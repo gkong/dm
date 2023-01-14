@@ -1,6 +1,5 @@
 [Unit]
 Description=delight-meditate TEST server
-Requires=dm.mount
 
 [Service]
 Restart=always
@@ -9,8 +8,8 @@ KillMode=mixed
 KillSignal=SIGINT
 SendSIGKILL=yes
 TimeoutStopSec=60
-User=core
-Group=core
+User=ubuntu
+Group=ubuntu
 WorkingDirectory=/dm/test/app
 ReadOnlyDirectories=/
 ReadWriteDirectories=/dm/test 

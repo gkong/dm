@@ -26,7 +26,7 @@ rm -rf $dest
 mkdir -p $dest
 cd $dest
 tar xf /dm/incoming/$prog.tgz
-chown -R core:core $dest
+chown -R ubuntu:ubuntu $dest
 
 systemctl start $prog
 

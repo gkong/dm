@@ -49,7 +49,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/base64"
 	"errors"
 	"flag"
@@ -435,14 +434,9 @@ func main() {
 		}
 
 		srvtls = &http.Server{
-			Addr:         Config.SSLTCPAddr,
-			Handler:      hr,
-			ReadTimeout:  time.Duration(Config.HTTPReadTimeoutSecs) * time.Second,
-			WriteTimeout: time.Duration(Config.HTTPWriteTimeoutSecs) * time.Second,
-			IdleTimeout:  time.Duration(Config.HTTPIdleTimeoutSecs) * time.Second,
-			TLSConfig: &tls.Config{
-				GetCertificate: certManager.GetCertificate,
-			},
+			Addr:      Config.SSLTCPAddr,
+			Handler:   hr,
+			TLSConfig: certManager.TLSConfig(),
 		}
 
 		// start the SSL server
@@ -456,21 +450,15 @@ func main() {
 
 		// when SSL is ENabled, the non-SSL server just serves redirects
 		srv = &http.Server{
-			Addr:         Config.TCPAddr,
-			Handler:      root.Handle(nonSSLRedirectHandler),
-			ReadTimeout:  time.Duration(Config.HTTPReadTimeoutSecs) * time.Second,
-			WriteTimeout: time.Duration(Config.HTTPWriteTimeoutSecs) * time.Second,
-			IdleTimeout:  time.Duration(Config.HTTPIdleTimeoutSecs) * time.Second,
+			Addr:    Config.TCPAddr,
+			Handler: root.Handle(nonSSLRedirectHandler),
 		}
 		metricsRegisterEndpoint("nonssl", false, false)
 	} else {
 		// when SSL is DISabled, the non-SSL server serves everything
 		srv = &http.Server{
-			Addr:         Config.TCPAddr,
-			Handler:      hr,
-			ReadTimeout:  time.Duration(Config.HTTPReadTimeoutSecs) * time.Second,
-			WriteTimeout: time.Duration(Config.HTTPWriteTimeoutSecs) * time.Second,
-			IdleTimeout:  time.Duration(Config.HTTPIdleTimeoutSecs) * time.Second,
+			Addr:    Config.TCPAddr,
+			Handler: hr,
 		}
 	}
 

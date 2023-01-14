@@ -3,17 +3,10 @@
 
 # configurable parameters that are the same for the dev, test, and prod instances
 
-clientVersion = "b17"            # CAREFUL! keep in sync with index.html dmClientVersion
+clientVersion = "b18"            # CAREFUL! keep in sync with index.html dmClientVersion
 
 clientVersionReqHdr = "Dm-Client-Version"
 clientUpdateReqHdr = "Dm-Client-Update"
-
-HTTPReadTimeoutSecs = 5
-HTTPWriteTimeoutSecs = 10
-HTTPIdleTimeoutSecs = 120
-
-emailServer = "smtp.mailgun.org"
-emailPort = "587"
 
 dailyBackupTime = 25200         # 7AM in secs since midnight UTC (ranges from 11PM PDT to 3AM EST-DST)
 
