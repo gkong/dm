@@ -8,6 +8,7 @@ jQuery = $ = require('jquery');
 var Rlite = require('rlite-router');
 Handlebars = require('handlebars/runtime');  // put into global scope, so dmt.js can see it
 require('bootstrap');
+var spa = require('spa-components');
 
 
 var state;                  // state information obtained from server (with some client-side additions)
@@ -89,10 +90,14 @@ $(function() {
 
 	var path = window.location.pathname;
 
-	// must call spaInit, BEFORE xhrPostJson, and tell it NOT to render,
-	// because xhrPostJson's error handling can call spaVisit,
+	// must call spa.init, BEFORE xhrPostJson, and tell it NOT to render,
+	// because xhrPostJson's error handling can call spa.visit,
 	// to redirect to a different page.
-	var prevState = spaInit(route, false);
+
+	var prevState = spa.init({
+		router:   route,
+		logging:  false,
+	});
 
 	xhrPostJson("/getstate", "").then(function(okXHR) {
 		state.loggedIn = true;
@@ -107,7 +112,7 @@ $(function() {
 			// history has already been set up by spaInit; just need to render.
 			route(path);
 			if (prevState != null)
-				spaScrollTo(prevState.scrollx, prevState.scrolly);
+				spa.scrollTo(prevState.scrollx, prevState.scrolly);
 		}
 		navSetup();
 		cron();
@@ -180,7 +185,7 @@ function xhrHandler() {
 			} else if (this.status === 401) {
 				stateLoggedOut();
 				if (!ok401(window.location.pathname))
-					spaVisit('/c/login');
+					spa.visit('/c/login');
 				this.dmhandled = true;
 			}
 			this.dmreject(this);
@@ -297,7 +302,7 @@ function navSetup() {
 // of multiple logins on different devices getting out of date.
 function cron() {
 	if ($("#dm-home-visible").length > 0) {
-		spaVisit('/c/home');
+		spa.visit('/c/home');
 	}
 	var d = new Date();
 	var msTillMidnight = ((24*60*60) - ((((d.getHours() * 60) + d.getMinutes()) * 60) + d.getSeconds())) * 1000;
@@ -344,9 +349,9 @@ function modalConfirm(msg) {
 
 function rootPage() {
 	if (state.loggedIn)
-		spaVisit('/c/home');
+		spa.visit('/c/home');
 	else
-		spaVisit('/c/login');
+		spa.visit('/c/login');
 }
 
 function notfoundPage() {
@@ -359,7 +364,7 @@ function signupPage() {
 	showPage(Handlebars.templates.signup({}));
 	$('#signup-alert').hide();
 	$('#dm-signup-button').click(function() { signup(); });
-	$('#dm-login-button').click(function() { spaVisit('/c/login'); });
+	$('#dm-login-button').click(function() { spa.visit('/c/login'); });
 	$('#dm-signup-panel').on("keydown", function(e) {
 		if (e.keyCode === 13) {
 			e.preventDefault();
@@ -382,7 +387,7 @@ function verifyOkPage() {
 		msg: "Your account has been activated and is ready for you to log in!",
 		buttonlabel: "Go to login page"
 	}));
-	$('#dm-dialog-button button').click(function() { spaVisit('/c/login'); });
+	$('#dm-dialog-button button').click(function() { spa.visit('/c/login'); });
 	$('#dm-dialog-button').removeClass("dm-gone");
 }
 
@@ -395,12 +400,12 @@ function loginPage() {
 	document.title = "Delight/Meditate - login";
 	showPage(Handlebars.templates.login({}));
 	$('#login-alert').hide();
-	$('#dm-about-button').click(function() { spaVisit('/c/about'); });
+	$('#dm-about-button').click(function() { spa.visit('/c/about'); });
 	$('#dm-test-drive-button').click(function() {
-		spaVisit('/c/testdrive');
+		spa.visit('/c/testdrive');
 	});
 	$('#dm-login-button').click(function() { login(); });
-	$('#dm-signup-button').click(function() { spaVisit('/c/signup'); });
+	$('#dm-signup-button').click(function() { spa.visit('/c/signup'); });
 	$('#dm-login-panel').on("keydown", function(e) {
 		if (e.keyCode === 13) {
 			e.preventDefault();
@@ -439,10 +444,10 @@ function aboutPage() {
 		$('.dm-visitor-only').addClass("dm-gone");
 	} else {
 		$('#dm-test-drive-button').click(function() {
-			spaVisit('/c/testdrive');
+			spa.visit('/c/testdrive');
 		});
 	}
-	$('#dm-help-button').click(function() { spaVisit('/c/help'); });
+	$('#dm-help-button').click(function() { spa.visit('/c/help'); });
 }
 
 function helpPage() {
@@ -494,7 +499,7 @@ function homePage(ignore1, ignore2, ignore3, testdrivearg, aindex, sindex, prevd
 			msg: "You don't currently have any reading plans.",
 			buttonlabel: "Add a plan"
 		}));
-		$('#dm-dialog-button button').click(function() { spaVisit('/c/plans'); });
+		$('#dm-dialog-button button').click(function() { spa.visit('/c/plans'); });
 		$('#dm-dialog-button').removeClass("dm-gone");
 		return
 	}
@@ -794,7 +799,7 @@ function plansPage() {
 
 		$('.dm-plan-details-button').click(function() {
 			// id="dm-pdb-{{name}}"
-			spaVisit('/c/plandetails/' + $(this).prop("id").substr(7))
+			spa.visit('/c/plandetails/' + $(this).prop("id").substr(7))
 		});
 		if (state.loggedIn) {
 			$('.dm-plan-add-button button').click(function() {
@@ -809,7 +814,7 @@ function plansPage() {
 		} else {
 			$('.dm-plan-add-button').addClass('dm-gone');
 			$('.dm-plan-login-button').removeClass('dm-gone');
-			$('.dm-plan-login-button button').click(function() { spaVisit('/c/login'); });
+			$('.dm-plan-login-button button').click(function() { spa.visit('/c/login'); });
 		}
 	});
 }
@@ -886,7 +891,7 @@ function plandayPage(params) {
 
 		$('.dm-plandet').click(function() {
 			// id="dm-plandet-{{plan}}"
-			spaVisit('/c/plandetails/' + $(this).prop("id").substr(11));
+			spa.visit('/c/plandetails/' + $(this).prop("id").substr(11));
 		});
 
 		$('#dm-planday-cancel').click(function() { window.history.back(); });
@@ -966,7 +971,7 @@ function ecpendingPage() {
 		msg: "You will receive an email shortly. Please follow its instructions, to verify your new email address.",
 		buttonlabel: "OK"
 	}));
-	$('#dm-dialog-button button').click(function() { spaVisit('/c/home'); });
+	$('#dm-dialog-button button').click(function() { spa.visit('/c/home'); });
 	$('#dm-dialog-button').removeClass("dm-gone");
 }
 
@@ -976,7 +981,7 @@ function ecdonePage() {
 		msg: "Your email address change has been confirmed! Please log in with your new email address.",
 		buttonlabel: "Go to login page"
 	}));
-	$('#dm-dialog-button button').click(function() { spaVisit('/c/login'); });
+	$('#dm-dialog-button button').click(function() { spa.visit('/c/login'); });
 	$('#dm-dialog-button').removeClass("dm-gone");
 }
 
@@ -1003,7 +1008,7 @@ function signup() {
 	};
 
 	xhrPostJson("/signup", JSON.stringify(signupParams)).then(function(/* okXHR */) {
-		spaReplace('/c/pending');
+		spa.replace('/c/pending');
 	}, function(errorXHR) {
 		formErrorAlert('#signup-alert', errorXHR, "signup failed");
 	});
@@ -1019,7 +1024,7 @@ function login() {
 	xhrPostJson("/login", JSON.stringify(loginParams)).then(function(okXHR) {
 		state.loggedIn = true;
 		receiveStateResponse(JSON.parse(okXHR.responseText));
-		spaVisit('/c/home');
+		spa.visit('/c/home');
 	}, function(errorXHR) {
 		formErrorAlert('#login-alert', errorXHR, "login failed");
 	});
@@ -1028,13 +1033,13 @@ function login() {
 function logout() {
 	xhrPostJson("/logout","").then(function(/* okXHR */) {
 		stateLoggedOut();
-		spaReplace('/c/login');
+		spa.replace('/c/login');
 	}, function(errorXHR) {
 		if (errorXHR.dmhandled)
 			return;
 		modalAlert("logout error "+errorXHR.status.toString()).then(function() {
 			stateLoggedOut();
-			spaReplace('/c/login');
+			spa.replace('/c/login');
 		});
 	});
 }
@@ -1046,7 +1051,7 @@ function forgot() {
 	};
 
 	xhrPostJson("/pwforgot", JSON.stringify(pwrecoverParams)).then(function(/* okXHR */) {
-		spaVisit('/c/forgotpending');
+		spa.visit('/c/forgotpending');
 	}, function(errorXHR) {
 		formErrorAlert('#forgot-alert', errorXHR, "password recovery failed");
 	});
@@ -1061,7 +1066,7 @@ function pwreset() {
 
 	xhrPostJson("/dorecover", JSON.stringify(pwresetParams)).then(function(/* okXHR */) {
 		modalAlert("Your password has been changed. Please log in with your new password.").then(function() {
-			spaVisit('/c/login');
+			spa.visit('/c/login');
 		});
 	}, function(errorXHR) {
 		formErrorAlert('#pwreset-alert', errorXHR, "password reset failed");
@@ -1100,13 +1105,13 @@ function userprofile() {
 		if (resp.logout)
 			stateLoggedOut();
 		if (resp.emailsent)
-			spaVisit('/c/ecpending');
+			spa.visit('/c/ecpending');
 		else if (resp.pwchanged)
 			modalAlert("Your password has been changed. Please log in with your new password.").then(function() {
-				spaVisit('/c/login');
+				spa.visit('/c/login');
 			});
 		else
-			spaVisit('/c/home');
+			spa.visit('/c/home');
 	}, function(errorXHR) {
 		formErrorAlert('#profile-alert', errorXHR, "problem updating profile");
 	});
@@ -1119,7 +1124,7 @@ function addplan(name) {
 	};
 	xhrPostJson("/actadd", JSON.stringify(aaParams)).then(function(okXHR) {
 		receiveStateResponse(JSON.parse(okXHR.responseText));
-		spaVisit('/c/home');
+		spa.visit('/c/home');
 	}, function(errorXHR) {
 		if (!errorXHR.dmhandled)
 			modalAlert("couldn't add plan - "+errorXHR.status.toString());
@@ -1137,7 +1142,7 @@ function delplan(planName) {
 				return;
 			}
 			state.activities.splice(aindex, 1);
-			spaReplace('/c/home');
+			spa.replace('/c/home');
 		}, function(errorXHR) {
 			if (!errorXHR.dmhandled)
 				modalAlert("couldn't delete plan - "+errorXHR.status.toString());
@@ -1481,232 +1486,4 @@ function citpretty(cit) {
 		return fullname(cit);
 	else
 		return fullname(cit.slice(0, spaceNdx))+"<br/>"+cit.slice(spaceNdx+1);
-}
-
-
-/////////////////////////////////////////////////////////////////////////////
-
-
-// single-page-app plumbing
-//
-// together with a client-side router, this code implements the basic plumbing
-// of a single-page app. it manages history and scroll position.
-//
-// it works with chrisdavies/rlite (and any other client-side router that
-// uses a function(path) signature or can be shimmed to do so.
-//
-// XXX - are there conventions for sharing history.state?
-
-var spaDebug = false;
-
-const SPA_SCROLL_RETRY_MS = 50;      // interval between scroll retries
-const SPA_SCROLL_TIMEOUT_MS = 5000;  // how long to try to scroll before giving up
-
-const SPA_RS_MIN_IVL_MS = 100;       // for rate-limiting calls to scroll handler
-
-var spaRouter; // function to execute routes, will be called with a single path arg
-
-
-// spaInit should be called during initialization, from a "DOM ready" handler.
-//
-// it looks for an existing history stack entry and, if it finds one of its
-// own making, returns it, otherwise it returns null.
-//
-// it makes sure the history stack contains at least one entry and that the
-// current entry's path is set to the current value of window.location.pathname.
-//
-// arguments:
-//   router - function to execute client-side routes, will be called with a single path arg
-//   render - flag: if true, spaInit will call router to render window.location.pathname
-//
-// XXX - this has only been tested with render = false
-function spaInit(router, render) {
-	if (spaDebug)
-		console.log("spaInit - " + window.location.pathname + "  --  " + JSON.stringify(history.state));
-
-	spaRouter = router;
-
-	window.onclick = spaClickHandler;
-	window.onpopstate = spaPopHandler;
-	window.onscroll = spaScrollHandler;
-
-	var retVal;
-	if (history.state != null && history.state.hasOwnProperty('path') && history.state.path === window.location.pathname) {
-		// we are returning to a history entry that we made
-		retVal = history.state;
-	} else {
-		// this is a fresh invocation. call replaceState, not pushState,
-		// because we want to start with only one entry on the history stack.
-		history.replaceState( {
-			scrollx: window.scrollX,
-			scrolly: window.scrollY,
-			path: window.location.pathname,
-		}, "", window.location.pathname);
-		retVal = null;
-	}
-
-	if (render)
-		spaRouter(window.location.pathname);
-
-	return retVal;
-}
-
-// navigate to a client-side "page," pushing an entry onto the history stack.
-function spaVisit(path) {
-	if (spaDebug)
-		console.log("spaVisit - " + path);
-
-	spaSaveScroll();
-
-	history.pushState({
-		scrollx: 0,
-		scrolly: 0,
-		path: path
-	}, "", path);
-
-	window.scrollTo(0,0);
-	spaRouter(path);
-}
-
-// replace client-side "page," WITHOUT pushing anything onto the history stack.
-function spaReplace(path) {
-	if (spaDebug)
-		console.log("spaReplace - " + path);
-
-	history.replaceState( {
-		scrollx: 0,
-		scrolly: 0,
-		path: path
-	}, "", path);
-
-	window.scrollTo(0,0);
-	spaRouter(path);
-}
-
-// save current scroll position.
-function spaSaveScroll() {
-	if (spaDebug)
-		console.log("spaSaveScroll - " + window.scrollY);
-
-	history.replaceState( {
-		scrollx: window.scrollX,
-		scrolly: window.scrollY,
-		path: history.state.path
-	}, "", history.state.path);
-}
-
-// it's possible that not enough of the page has been rendered to scroll
-// to the target location, so try repeatedly, until we get there or time out.
-function spaScrollTo(targetx, targety) {
-	if (spaDebug)
-		console.log("spaScrollTo", targetx, targety);
-
-	var started = Date.now();
-
-	function scrollTry() {
-		window.scrollTo(targetx, targety);
-		if (window.scrollX === targetx  &&  window.scrollY === targety)
-			return;
-		if (Date.now() - started > SPA_SCROLL_TIMEOUT_MS)
-			return;
-		setTimeout(scrollTry, SPA_SCROLL_RETRY_MS);
-	}
-
-	scrollTry();
-}
-
-// scroll event handler
-//
-// there is no way to trigger a spaSaveScroll when a user navigates away
-// via browser forward or back button, so we must instead watch and
-// save scroll position whenever the page is scrolled.
-//
-// it would be simpler just to call spaSaveScroll for every scroll event,
-// but frequent scroll events make iPhones misbehave.
-// this band-aids that problem, by rate-limiting scroll events.
-//
-// when idle, handler sits ready to receive scroll events.
-// when a scroll starts, handler unplugs itself and only re-plugs occasionally.
-// need to make sure we save the final value after the scroll has completed.
-// the last save happens at most one interval after the last scroll event.
-//
-// reference: brigade/delayed-scroll-restoration-polyfill
-function spaScrollHandler() {
-	if (spaDebug)
-		console.log("spaScroll event");
-
-	window.onscroll = null;
-	setTimeout(function() {
-		spaSaveScroll();
-		window.onscroll = spaScrollHandler;
-	}, SPA_RS_MIN_IVL_MS);
-}
-
-// history popState event handler
-//
-// note that popState is poorly named - it is called when the user hits
-// either the forward or the back button, and it does not modify the history
-// stack; it simply indicates you have changed position within the stack.
-function spaPopHandler(e) {
-	if (spaDebug)
-		console.log("spaPop event");
-
-	// arg is an event, whose state property is a copy of the state object
-	// that was given to pushState/replaceState.
-	spaRouter(e.state.path);
-	spaScrollTo(e.state.scrollx, e.state.scrolly);
-}
-
-// spaClickHandler, spaWhich, and spaSameOrigin are derived from page.js.
-//
-// spaClickHandler has been simplified somewhat.
-// it does NOT support hashtags, query strings, or windows file: URLs.
-
-// document click handler, for <a> elements referring to client routes
-function spaClickHandler(e) {
-	if (e.defaultPrevented)
-		return;
-
-	// only interested in plain left mouse clicks
-	if (spaWhich(e) !== 1)
-		return;
-	if (e.metaKey || e.ctrlKey || e.shiftKey)
-		return;
-
-	// only interested in html anchor elements.
-	var el = e.target;
-	while (el && el.nodeName !== 'A')
-		el = el.parentNode;
-	if (!el || el.nodeName !== 'A')
-		return;
-
-	if (el.hasAttribute('download') || el.getAttribute('rel') === 'external')
-		return;
-
-	var link = el.getAttribute('href');
-	if (link && link.indexOf('mailto:') > -1)
-		return;
-
-	// <a target="...">
-	if (el.target)
-		return;
-
-	// href must exist and be same origin as window.location
-	if (!spaSameOrigin(el.href))
-		return;
-
-	e.preventDefault();
-	spaVisit(el.pathname);
-}
-
-function spaWhich(e) {
-	e = e || window.event;
-	return e.which === null ? e.button : e.which;
-}
-
-function spaSameOrigin(href) {
-	var origin = location.protocol + '//' + location.hostname;
-	if (location.port)
-		origin += ':' + location.port;
-	return (href && (0 === href.indexOf(origin)));
 }

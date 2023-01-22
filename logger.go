@@ -87,6 +87,7 @@ func (z zFilterWriter) Write(p []byte) (n int, err error) {
 	switch {
 	case strings.Contains(s, "TLS handshake error"):
 	case strings.Contains(s, "http2: server: error reading preface from client"):
+	case strings.Contains(s, "URL query contains semicolon"):
 	default:
 		z.logger.Error("std log - " + s)
 		emailAlertThrottled(alertLevelError)

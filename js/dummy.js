@@ -14,3 +14,4 @@ jQuery = $ = require('jquery');
 var Rlite = require('rlite-router');
 Handlebars = require('handlebars/runtime');  // put into global scope, so dmt.js can see it
 require('bootstrap');
+var spa = require('spa-components');

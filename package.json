@@ -9,6 +9,7 @@
     "factor-bundle": "^2.5.0",
     "handlebars": "^4.7.7",
     "jquery": "^3.6.3",
-    "rlite-router": "^2.0.3"
+    "rlite-router": "^2.0.3",
+    "spa-components": "github:gkong/spa#main"
   }
 }

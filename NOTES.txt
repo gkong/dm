@@ -16,12 +16,12 @@ environment
 			npm install cssnano postcss --save-dev
 			npm install --save-dev postcss-cli
 		in everyday build workflow, use of all these tools is contained in Makefile and build-fe.sh
-	package.json and local node_modules are in the js directory.
 	dependency installation
 		npm install jquery
 		npm install bootstrap@^4.x.x
 		npm install rlite-router  # added 1 package!
 		npm install handlebars
+		npm install git://github.com/gkong/spa.git#main
 
 
 configuration and secrets
