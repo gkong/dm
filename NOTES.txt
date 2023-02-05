@@ -85,9 +85,11 @@ building, testing, and deploying
 		after making changes, clear browser cache and storage, rather than spinning client version
 	see the "server setup" section below before proceeding here
 	deploy to test instance
+		# to cross-compile, prefix the following line with something like: GOOS=linux GOARCH=arm64
 		DM_TEST_SECRETS_TOML=yourTestSecretsFileFullPathname ./build-test.sh
 		./deploy-test.sh
 	deploy to production instance
+		# to cross-compile, prefix the following line with something like: GOOS=linux GOARCH=arm64
 		DM_PROD_SECRETS_TOML=yourProductionSecretsFileFullPathname ./build-prod.sh
 		./deploy-prod.sh
 
@@ -197,11 +199,15 @@ server setup
 	DNS
 		make A records for www and @ pointing to the new server
 	directory structure
-		rcp deploy/mkdirs.sh to the server and run it
-		chown -R ubuntu:ubuntu /dm
+		rcp deploy/mkdirs.sh to the server
+		on the server:
+			sudo mkdir /dm
+			sudo chown ubuntu:ubuntu /dm
+			as user ubuntu:
+				./mkdirs.sh
 	systemd
 		install dmtest.service dmprod.service into /etc/systemd/system
-			=> restrict test instance write permissions, so don't fight over SSL cert maintenance
+			=> test instance write permissions are restricted, so don't fight over SSL cert maintenance
 		systemctl enable dmtest  # will fail until first dm deployment
 		systemctl enable dmprod  # will fail until first dm deployment
 	deploy dm to the server following instructions above

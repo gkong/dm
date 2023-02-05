@@ -113,7 +113,11 @@ func mwRequireUser(user []byte) qctx.MwMaker {
 func mwThrottledIPPort(rl *throttled.GCRARateLimiter) qctx.MwMaker {
 	return func(next qctx.CtxHandler) qctx.CtxHandler {
 		return qctx.CtxHandlerFunc(func(c *qctx.Ctx) {
-			limited, _, err := rl.RateLimit(c.R.RemoteAddr, 1)
+			ip := c.R.RemoteAddr
+			if Config.ReverseProxy && c.R.Header.Get("X-Forwarded-For") != "" {
+				ip = c.R.Header.Get("X-Forwarded-For")
+			}
+			limited, _, err := rl.RateLimit(ip, 1)
 			if err != nil {
 				internalErr("mwThrottledIPPort", "RateLimit", err, c)
 				return
@@ -269,6 +273,11 @@ func logRoot(c *qctx.Ctx, code int, lat int64) {
 		return
 	}
 
+	ip := c.R.RemoteAddr
+	if Config.ReverseProxy && c.R.Header.Get("X-Forwarded-For") != "" {
+		ip = c.R.Header.Get("X-Forwarded-For")
+	}
+
 	var user string
 	haveUser := false
 	if c.Sess != nil {
@@ -280,17 +289,17 @@ func logRoot(c *qctx.Ctx, code int, lat int64) {
 	}
 
 	if haveUser {
-		zlogger.Info("HTTP-req", zIP(c.R.RemoteAddr), zMethod(c.R.Method),
+		zlogger.Info("HTTP-req", zIP(ip), zMethod(c.R.Method),
 			zPath(c.R.URL.Path), zStatus(code), zLatencyUs(lat), zUser(user))
 	} else {
 		ref := c.R.Header.Get("Referer")
 		// log Referer if non-logged-in user visiting "/",
 		// which indexHandler re-writes to "/index/".
 		if c.R.URL.Path == "/index/" && ref != "" {
-			zlogger.Info("HTTP-req", zIP(c.R.RemoteAddr), zMethod(c.R.Method),
+			zlogger.Info("HTTP-req", zIP(ip), zMethod(c.R.Method),
 				zPath(c.R.URL.Path), zStatus(code), zLatencyUs(lat), zReferer(ref))
 		} else {
-			zlogger.Info("HTTP-req", zIP(c.R.RemoteAddr), zMethod(c.R.Method),
+			zlogger.Info("HTTP-req", zIP(ip), zMethod(c.R.Method),
 				zPath(c.R.URL.Path), zStatus(code), zLatencyUs(lat))
 		}
 	}

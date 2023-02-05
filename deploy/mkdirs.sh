@@ -5,9 +5,14 @@
 
 # run this on production server, to make directories
 
-mkdir /dm
+destRoot=/dm
 
-cd /dm
+if [ ! -d "$destRoot"  -o  ! -w "$destRoot" ] ; then
+	echo "$destRoot" must exist and be writable
+	exit 1
+fi
+
+cd $destRoot
 
 mkdir -m 755 active bin incoming prod shared shared/cert test tmp
 

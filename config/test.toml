@@ -1,11 +1,14 @@
 # Copyright 2017 George S. Kong. All rights reserved.
 # Use of this source code is governed by a license that can be found in the LICENSE.txt file.
 
+# if you need to make changes, add them to your secrets files; they will override what's here
+
 debugPanicStack = true          # log stack trace on panic
 debugEmail = false              # log instead of emailing verifications and alerts
 logAllHTTP = true               # log all HTTP requests
 
 TCPAddr = ":8080"
+ReverseProxy = false
 SSL = true
 SSLTCPAddr = ":8081"
 SSLCertDir = "/dm/shared/cert"

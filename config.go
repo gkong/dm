@@ -46,12 +46,13 @@ type tomlConfig struct {
 
 	ClientVersion string
 
-	TCPAddr    string
-	SSL        bool
-	SSLTCPAddr string
-	SSLCertDir string
-	SSLHosts   []string
-	BaseURL    string
+	TCPAddr      string
+	ReverseProxy bool
+	SSL          bool
+	SSLTCPAddr   string
+	SSLCertDir   string
+	SSLHosts     []string
+	BaseURL      string
 
 	QsessCookieSecure bool
 
