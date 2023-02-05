@@ -459,13 +459,8 @@ database backups
 
 
 todo
-	update all JS dependencies, rebuild JS artifacts
-	help screen needs a paragraph on daily operation
-	change "about" page help button to "how it works"
-	factor out JS SPA code into a separate module
 	convert docstore/docqueries to the go embed package
-	review golang dependencies, including JSON code gen; see if can eliminate any
-	eliminate handlebars; use JS templates
-	move all static files to a CDN
+	review and simplify golang dependencies
+		replace JSON code generation with github.com/json-iterator/go
+	replace handlebars with vanilla JavaScript template literals
 	automate the management of version numbers in build-fe.sh, Makefile, index.html, and base.toml
-	run ESLint on JS code

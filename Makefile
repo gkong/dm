@@ -5,7 +5,7 @@
 # leave non-versioned, non-minified versions in static, for the benefit of dm-admin.html
 
 # change version numbers here, AND IN index.html, to force clients to reload
-dmt = dmt-v18
+dmt = dmt-v19
 css = dm-v11
 
 # this Makefile must reside in the parent of "template", "js", "css", and "static".

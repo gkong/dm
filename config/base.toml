@@ -3,7 +3,7 @@
 
 # configurable parameters that are the same for the dev, test, and prod instances
 
-clientVersion = "b20"           # CAREFUL! keep in sync with index.html dmClientVersion
+clientVersion = "b21"           # CAREFUL! keep in sync with index.html dmClientVersion
 
 clientVersionReqHdr = "Dm-Client-Version"
 clientUpdateReqHdr = "Dm-Client-Update"
