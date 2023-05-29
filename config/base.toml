@@ -29,7 +29,7 @@ docTTL = 5184000                # 60 days
 docQueriesTTL = 43200           # 12 hrs
 
 defaultBibleVersion = "ESV"
-defaultBibleProvider = "BibleGateway.com-PRINT"
+defaultBibleProvider = "BibleGateway.com"
 
 sysProc = "/proc"
 
@@ -52,6 +52,9 @@ maxAgeSecs = 7200               # 2 hours
 minRefreshSecs = 1800
 longMaxAgeSecs = 2592000        # 30 days
 longMinRefreshSecs = 648000
+cookieSecure = true
+cookieHTTPOnly = true
+cookieSameSite = "lax"
 
 [qsVerify]
 authType = "token"              # must be token; it has to travel by email

@@ -13,7 +13,6 @@ SSL = false
 SSLTCPAddr = ""
 SSLCertDir = ""
 
-qsessCookieSecure = false
 csrfCookieSecure = false
 
 staticDir = "./static"
@@ -23,3 +22,6 @@ dbDir = "/var/lib/dm/db"
 bckDir = "/var/lib/dm/bck"
 bckLatestDir = "/var/lib/dm/bcklatest"
 logDest = "/var/log/dm/dm.log"  # either "stdout" or full pathname of log file (to be rotated by lumberjack)
+
+[qsLogin]
+cookieSecure = false

@@ -46,7 +46,8 @@ func csrfSetCookie(w http.ResponseWriter) {
 		Domain:   "",
 		MaxAge:   Config.CSRFMaxAgeSecs,
 		Secure:   Config.CSRFCookieSecure,
-		HttpOnly: false, // client JS must read this
+		HttpOnly: false, // client JS must be able to read this for "cookie to header" CSRF protection
+		SameSite: http.SameSiteLaxMode,
 	})
 }
 

@@ -383,7 +383,12 @@ security
 			</html>
 		most important endpoint that changes state is /userset,
 			and it requires the user's password EVERY TIME
-		"double-sent cookie" ("cookie to header") method - requires no server state
+		mitigation via the SameSite cookie attribute
+			very simple - just set SameSite to anything but "none"
+			we now do this for our session cookies
+		mitigation via the "cookie to header" method
+			works with browsers that don't implement SameSite properly (nowadays, all the important ones do)
+			requires no server state
 			server sets a cookie to a random value
 			client-side javascript sets a custom request header to the same value
 			server verifies cookie and header match (proving JS is from same origin)

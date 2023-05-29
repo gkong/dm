@@ -13,7 +13,6 @@ SSL = true
 SSLTCPAddr = ":443"
 SSLCertDir = "/dm/shared/cert"
 
-qsessCookieSecure = true
 csrfCookieSecure = true
 
 staticDir = "/dm/prod/app/static"

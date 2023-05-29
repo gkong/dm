@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"io"
+	"net/http"
 	"strings"
 )
 
@@ -105,4 +106,19 @@ func (e wrapErr) Error() string {
 		return e.msg + " - " + e.err.Error()
 	}
 	return e.msg
+}
+
+// convert string to http.SameSite
+
+func strToSameSite(s string) http.SameSite {
+	switch strings.ToLower(s) {
+	case "lax":
+		return http.SameSiteLaxMode
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteDefaultMode
+	}
 }

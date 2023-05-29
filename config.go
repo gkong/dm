@@ -54,8 +54,6 @@ type tomlConfig struct {
 	SSLHosts     []string
 	BaseURL      string
 
-	QsessCookieSecure bool
-
 	CSRFCookieSecure bool
 
 	StaticDir string
@@ -126,6 +124,7 @@ type ConfigQsess struct {
 	CookieName         string
 	CookieSecure       bool
 	CookieHTTPOnly     bool
+	CookieSameSite     string
 }
 
 func doConfig(args []string) {
@@ -227,6 +226,27 @@ var qsVerify *qsess.Store   // sign-up email verifications
 var qsEmail *qsess.Store    // email change verifications
 var qsRecovery *qsess.Store // password recovery verifications
 
+// fill in a qsess.Store struct with data we've obtained from a TOML file
+func doQsess(store *qsess.Store, config ConfigQsess) {
+	var err error
+
+	store.AuthType, err = qsess.ParseAuthType(config.AuthType)
+	if err != nil {
+		logPanic("doQsess - unrecognized value for qsess.Store.AuthType in config file", err, nil)
+	}
+
+	store.MaxAgeSecs = config.MaxAgeSecs
+	store.MinRefreshSecs = config.MinRefreshSecs
+
+	if config.AuthType == "cookie" {
+		store.CookieName = config.CookieName
+		store.CookieSecure = config.CookieSecure
+		store.CookieHTTPOnly = config.CookieHTTPOnly
+		store.CookieSameSite = strToSameSite(config.CookieSameSite)
+	}
+}
+
+// setup session stores for login, sign-up email verification, email change, and password recovery
 func sessSetup() {
 	var err error
 
@@ -240,18 +260,9 @@ func sessSetup() {
 	if Config.QsLogin.AuthType != "cookie" {
 		logPanic("sessSetup - qsLogin AuthType must be cookie", nil, nil)
 	}
-	qsLogin.AuthType = qsess.CookieAuth
 
-	qsLogin.MaxAgeSecs = Config.QsLogin.MaxAgeSecs
-	qsLogin.MinRefreshSecs = Config.QsLogin.MinRefreshSecs
-	qsLogin.CookieSecure = Config.QsessCookieSecure
-
-	if Config.QsLogin.CookieName != "" {
-		qsLogin.CookieName = Config.QsLogin.CookieName
-	}
-
+	doQsess(qsLogin, Config.QsLogin)
 	qsLogin.NewSessData = nil
-
 	qsLogin.SessionSaved = dbRecordVisit
 
 	// store for sign-up email verifications
@@ -264,12 +275,8 @@ func sessSetup() {
 	if Config.QsVerify.AuthType != "token" {
 		logPanic("sessSetup - qsVerify AuthType must be token", nil, nil)
 	}
-	qsVerify.AuthType = qsess.TokenAuth
 
-	qsVerify.MaxAgeSecs = Config.QsVerify.MaxAgeSecs
-	qsVerify.MinRefreshSecs = Config.QsVerify.MinRefreshSecs
-	qsVerify.CookieSecure = Config.QsessCookieSecure
-
+	doQsess(qsVerify, Config.QsVerify)
 	qsVerify.NewSessData = NewVerifySessData
 
 	// store for email change verifications
@@ -282,12 +289,8 @@ func sessSetup() {
 	if Config.QsEmail.AuthType != "token" {
 		logPanic("sessSetup - qsEmail AuthType must be token", nil, nil)
 	}
-	qsEmail.AuthType = qsess.TokenAuth
 
-	qsEmail.MaxAgeSecs = Config.QsEmail.MaxAgeSecs
-	qsEmail.MinRefreshSecs = Config.QsEmail.MinRefreshSecs
-	qsEmail.CookieSecure = Config.QsessCookieSecure
-
+	doQsess(qsEmail, Config.QsEmail)
 	qsEmail.NewSessData = NewEmailSessData
 
 	// store for password recovery verifications
@@ -300,12 +303,7 @@ func sessSetup() {
 	if Config.QsRecovery.AuthType != "token" {
 		logPanic("sessSetup - qsRecovery AuthType must be token", nil, nil)
 	}
-	qsRecovery.AuthType = qsess.TokenAuth
 
-	qsRecovery.MaxAgeSecs = Config.QsRecovery.MaxAgeSecs
-	qsRecovery.MinRefreshSecs = Config.QsRecovery.MinRefreshSecs
-	qsRecovery.CookieSecure = Config.QsessCookieSecure
-
-	// only need user id, which qsess already persists, so no need for SessData
+	doQsess(qsRecovery, Config.QsRecovery)
 	qsRecovery.NewSessData = nil
 }
