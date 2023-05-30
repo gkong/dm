@@ -161,16 +161,16 @@ func doConfig(args []string) {
 }
 
 // rate limit PER IP+port for things with emailed verifications - signup and pwrecover
-var verifLimiter *throttled.GCRARateLimiter
+var verifLimiter *throttled.GCRARateLimiterCtx
 
 // rate limit PER IP+port for login attempts
-var loginLimiter *throttled.GCRARateLimiter
+var loginLimiter *throttled.GCRARateLimiterCtx
 
 // rate limit PER USER for contact form submission
-var contactLimiter *throttled.GCRARateLimiter
+var contactLimiter *throttled.GCRARateLimiterCtx
 
 // rate limit PER IP+PORT for URL not found (to discourage excessive crawling)
-var notfoundLimiter *throttled.GCRARateLimiter
+var notfoundLimiter *throttled.GCRARateLimiterCtx
 
 func throttledSetup() {
 	store, err := memstore.New(0)

@@ -119,82 +119,55 @@ $(function() {
 	});
 });
 
-// server communication - xhr GET and POST implemented as promises
-//
-// these both use the same handler function.
-// they pass information (including their resolve and reject functions)
-// to the handler by tacking them onto the xhr object.
+function mwReq(req, method, url) {
+	req.setRequestHeader("Dm-Client-Version", clientVersion);
 
-function xhrGet(url) {
-	return new Promise(function(resolve, reject) {
-		var req = new XMLHttpRequest();
-		req.open("GET", url);
-		req.setRequestHeader("Dm-Client-Version", clientVersion);
+	var tok = document.cookie.replace(/(?:(?:^|.*;\s*)dm_csrf\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	if (tok != "")
+		req.setRequestHeader("Dm-Csrf", tok);
+		var endtime = performance.now();
 
-		req.onreadystatechange = xhrHandler;
-		req.dmresolve = resolve;
-		req.dmreject = reject;
-		req.dmurl = url;
-		req.dmstarttime = performance.now();
-		req.send();
-	});
+	req.myXhrStartTime = performance.now();  // stick this onto the xhr for latency calculation
 }
 
-function xhrPostJson(url, data, ignoreErrors) {
-	return new Promise(function(resolve, reject) {
-		var req = new XMLHttpRequest();
-		req.open("POST", url, true);
-		req.setRequestHeader("Dm-Client-Version", clientVersion);
-		req.setRequestHeader("Content-type", "application/json;charset=UTF-8");
-		var tok = document.cookie.replace(/(?:(?:^|.*;\s*)dm_csrf\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-		if (tok != "")
-			req.setRequestHeader("Dm-Csrf", tok);
-
-		req.onreadystatechange = xhrHandler;
-		req.dmresolve = resolve;
-		req.dmreject = reject;
-		req.dmurl = url;
-		req.dmstarttime = performance.now();
-		req.send(data);
-	});
+function mwReqJson(req, method, url) {
+	mwReq(req);
+	req.setRequestHeader("Content-type", "application/json;charset=UTF-8");
 }
 
-// common handler shared by xhrGet and xhrPostJson
-//
-// we handle some errors here (csrf, session expiration, client out-of-date).
-// when handle an error, we set the 'dmhandled' property on the xhr object,
-// so that callers won't also try to handle them.
-function xhrHandler() {
-	var endtime = performance.now();
-	if (this.readyState === this.DONE) {
-		if (this.getResponseHeader('Dm-Client-Update') === "true")
-			// graceful reload request
-			clientUpdateRequested = true;
-		if (this.status === 200) {
-			this.dmresolve(this);
-		} else {
-			if (this.status === 418) {
-				// cancel graceful reload and perform an immediate, disruptive reload
-				clientUpdateRequested = false;
-				modalReload("Due to a server software upgrade, this page will now be reloaded.");
-				this.dmhandled = true;  // on some browsers, callers will finish executing before the reload happens
-			} else if (this.status === 403) {
-				// can't do anything, must reload to get a new CSRF token
-				modalReload("CSRF error. This page will now be reloaded.");
-				this.dmhandled = true;  // on some browsers, callers will finish executing before the reload happens
-			} else if (this.status === 401) {
-				stateLoggedOut();
-				if (!ok401(window.location.pathname))
-					spa.visit('/c/login');
-				this.dmhandled = true;
-			}
-			this.dmreject(this);
-		}
-		// tell the server how long this request took
-		if (state.loggedIn)
-			postLatency(this.dmurl, Math.floor(endtime-this.dmstarttime));
+function mwBefore(resp, method, url) {
+	// graceful reload request
+	if (resp.getResponseHeader('Dm-Client-Update') === "true")
+		clientUpdateRequested = true;
+}
+
+function mwFailure(resp, method, url) {
+	if (resp.status === 418) {
+		// cancel graceful reload and perform an immediate, disruptive reload
+		clientUpdateRequested = false;
+		modalReload("Due to a server software upgrade, this page will now be reloaded.");
+		resp.dmhandled = true;  // on some browsers, callers will finish executing before the reload happens
+	} else if (resp.status === 403) {
+		// can't do anything, must reload to get a new CSRF token
+		modalReload("CSRF error. This page will now be reloaded.");
+		resp.dmhandled = true;  // on some browsers, callers will finish executing before the reload happens
+	} else if (resp.status === 401) {
+		stateLoggedOut();
+		if (!ok401(window.location.pathname))
+			spa.visit('/c/login');
+		resp.dmhandled = true;
 	}
 }
+
+function mwAfter(resp, method, url) {
+	// tell the server how long this request took
+	var endtime = performance.now();
+	if (state.loggedIn)
+		postLatency(url, Math.floor(endtime-resp.myXhrStartTime));
+}
+
+var xhrGet = spa.httpReqFunc("GET", mwReq, mwBefore, undefined, mwFailure, mwAfter);
+var xhrPostJson = spa.httpReqFunc("POST", mwReqJson, mwBefore, undefined, mwFailure, mwAfter);
 
 // return true if it's ok to stay on the current page when we receive a
 // 401 (unauthorized) status code, rather than redirecting to the login page.

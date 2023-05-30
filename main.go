@@ -110,7 +110,7 @@ func mwRequireUser(user []byte) qctx.MwMaker {
 //
 // NOTE: if run behind a reverse proxy, need to check X-Forwarded-For,
 // but not if NOT behind a reverse proxy, because can be spoofed!
-func mwThrottledIPPort(rl *throttled.GCRARateLimiter) qctx.MwMaker {
+func mwThrottledIPPort(rl *throttled.GCRARateLimiterCtx) qctx.MwMaker {
 	return func(next qctx.CtxHandler) qctx.CtxHandler {
 		return qctx.CtxHandlerFunc(func(c *qctx.Ctx) {
 			ip := c.R.RemoteAddr
@@ -134,7 +134,7 @@ func mwThrottledIPPort(rl *throttled.GCRARateLimiter) qctx.MwMaker {
 
 /*
 // middleware which applies a given throttled GCRA rate limiter, keyed by IP.
-func mwThrottledIP(rl *throttled.GCRARateLimiter) qctx.MwMaker {
+func mwThrottledIP(rl *throttled.GCRARateLimiterCtx) qctx.MwMaker {
 	return func(next qctx.CtxHandler) qctx.CtxHandler {
 		return qctx.CtxHandlerFunc(func(c *qctx.Ctx) {
 			var s string
@@ -162,7 +162,7 @@ func mwThrottledIP(rl *throttled.GCRARateLimiter) qctx.MwMaker {
 
 // middleware which applies a given throttled GCRA rate limiter, keyed by user ID.
 // assumes it is downstream from middleware that requires an active session.
-func mwThrottledUserID(rl *throttled.GCRARateLimiter) qctx.MwMaker {
+func mwThrottledUserID(rl *throttled.GCRARateLimiterCtx) qctx.MwMaker {
 	return func(next qctx.CtxHandler) qctx.CtxHandler {
 		return qctx.CtxHandlerFunc(func(c *qctx.Ctx) {
 			limited, _, err := rl.RateLimit(string(EmailFromUserKey(c.Sess.UserID())), 1)
@@ -352,14 +352,20 @@ func main() {
 	root := qctx.MwStack(mwRoot(Config.LogAllHTTP, Config.DebugPanicStack, false))
 
 	notfound := root.Append(mwThrottledIPPort(notfoundLimiter))
-	metrics := root.Append(mwBasicAuth(Config.MetricsUser, Config.MetricsPassword))
+	metrics := root.Append(mwBasicAuth(Config.MetricsUser, Config.MetricsPassword)) // external metrics scraper
 	static := root.Append(qctx.MwHeader("Cache-Control", "public, max-age=31536000"))
 	index := root.Append(mwSetCSRF, qctx.MwHeader(
 		"Cache-Control", "max-age=86400",
 		// would prefer just "default-src 'self'" - had to add "img-src data:" for stupid bootstrap SVGs
 		"Content-Security-Policy", "default-src 'self'; img-src 'self' data:",
 	))
-	plain := root.Append(mwCheckCSRF, qctx.MwHeader("Content-Type", "text/plain; charset=utf-8"))
+	adminindex := index.Append(qctx.MwRequireSess(qsLogin), mwRequireUser([]byte(strings.ToLower(Config.AdminUser))))
+
+	csrfCheck := root.Append(mwCheckCSRF)
+
+	// all stacks beyond this point check for CSRFs
+
+	plain := csrfCheck.Append(qctx.MwHeader("Content-Type", "text/plain; charset=utf-8"))
 
 	verif := plain.Append(mwThrottledIPPort(verifLimiter))
 	login := plain.Append(mwThrottledIPPort(loginLimiter))
@@ -367,7 +373,6 @@ func main() {
 
 	contact := sess.Append(mwThrottledUserID(contactLimiter))
 
-	adminindex := index.Append(qctx.MwRequireSess(qsLogin), mwRequireUser([]byte(strings.ToLower(Config.AdminUser))))
 	admin := sess.Append(mwRequireUser([]byte(strings.ToLower(Config.AdminUser))))
 
 	hr = httprouter.New()
@@ -394,9 +399,9 @@ func main() {
 
 	// routes visited by users in response to verif emails.
 	// Handlers redirect to paths which cause our client to be loaded.
-	get("/verify/:token", plain, verifyHandler, false, false)
-	get("/recover/:token", plain, recoverHandler, false, false)
-	get("/email/:token", plain, echangeHandler, false, false)
+	get("/verify/:token", root, verifyHandler, false, false)
+	get("/recover/:token", root, recoverHandler, false, false)
+	get("/email/:token", root, echangeHandler, false, false)
 
 	// REST endpoints visited by users who do NOT have a login session
 	post("/dorecover", plain, dorecoverHandler, false, false)

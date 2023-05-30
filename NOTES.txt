@@ -69,6 +69,8 @@ building, testing, and deploying
 		cd gen
 		./gen.sh
 	run locally on development workstation
+		go get -u  # get latest versions of dependencies
+		go mod tidy
 		go mod vendor
 		dev.toml specifies that the database resides in /var/lib/dm and logs in /var/log/dm
 			sudo bash
@@ -384,10 +386,13 @@ security
 		most important endpoint that changes state is /userset,
 			and it requires the user's password EVERY TIME
 		mitigation via the SameSite cookie attribute
-			very simple - just set SameSite to anything but "none"
-			we now do this for our session cookies
+			very simple - just set SameSite to "lax" or "strict"
+			not a sufficient solution
+				- old browsers don't implement SameSite
+				- "lax" doesn't protect GET endpoints that have side-effects
+				- "strict" is bad UX
 		mitigation via the "cookie to header" method
-			works with browsers that don't implement SameSite properly (nowadays, all the important ones do)
+			doesn't have the short-comings of the SameSite cookie method
 			requires no server state
 			server sets a cookie to a random value
 			client-side javascript sets a custom request header to the same value

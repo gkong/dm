@@ -68,17 +68,11 @@ func csrfErr(c *qctx.Ctx, msg string, err error) {
 // middleware to guard against CSRF attacks.
 // check that CSRF cookie and token match, and that they are not expired.
 // also perform CSRF cookie refresh, if required.
-// if Method == GET, allow the request.
 //
 // to avoid false positives, never let CSRF cookie expire before session:
 // set csrf max age >= session max age and csrf min refresh <= session min refresh.
 func mwCheckCSRF(next qctx.CtxHandler) qctx.CtxHandler {
 	return qctx.CtxHandlerFunc(func(c *qctx.Ctx) {
-		if c.R.Method == "GET" {
-			next.CtxServeHTTP(c)
-			return
-		}
-
 		cookie, err := c.R.Cookie(Config.CSRFCookieName)
 		if err != nil {
 			csrfErr(c, "no CSRF cookie", err)
