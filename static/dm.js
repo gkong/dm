@@ -171,8 +171,9 @@ function mwAfter(resp, method, url) {
 		postLatency(url, Math.floor(endtime-resp.myXhrStartTime));
 }
 
-var xhrGet = spa.httpReqFunc("GET", mwReq, mwBefore, mwFailure, mwAfter);
-var xhrPostJson = spa.httpReqFunc("POST", mwReqJson, mwBefore, mwFailure, mwAfter);
+var xhrGet = spa.httpReqFunc("GET", "", mwReq, mwBefore, mwFailure, mwAfter);
+
+var xhrPostJson = spa.httpReqFunc("POST", "", mwReqJson, mwBefore, mwFailure, mwAfter);
 
 // return true if it's ok to stay on the current page when we receive a
 // 401 (unauthorized) status code, rather than redirecting to the login page.
