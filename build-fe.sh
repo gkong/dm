@@ -11,8 +11,8 @@
 # and only copy to dest dir if contents differ.
 
 # change version numbers here, AND IN index.html, to force clients to reload
-dm=dm-v24
-dmdeps=dmdeps-v6
+dm=dm-v25
+dmdeps=dmdeps-v7
 
 # this script must be in the parent to dirs "js" and "static".
 # set basedir to the full pathname of the directory in which this script resides.

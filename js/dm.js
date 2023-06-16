@@ -119,6 +119,7 @@ $(function() {
 	});
 });
 
+// before every request - send client version and CSRF headers
 function mwReq(req, method, url) {
 	req.setRequestHeader("Dm-Client-Version", clientVersion);
 
@@ -130,18 +131,21 @@ function mwReq(req, method, url) {
 	req.myXhrStartTime = performance.now();  // stick this onto the xhr for latency calculation
 }
 
+// before requests that include a JSON request body - set content type header
 function mwReqJson(req, method, url) {
 	mwReq(req);
 	req.setRequestHeader("Content-type", "application/json;charset=UTF-8");
 }
 
+// before handling all responses - register graceful reload request
 function mwBefore(resp, method, url) {
-	// graceful reload request
 	if (resp.getResponseHeader('Dm-Client-Update') === "true")
 		clientUpdateRequested = true;
 }
 
+// before handling a response that's not in the range 200-299 - handle some errors
 function mwFailure(resp, method, url) {
+	mwBefore(resp, method, url);
 	if (resp.status === 418) {
 		// cancel graceful reload and perform an immediate, disruptive reload
 		clientUpdateRequested = false;
@@ -159,15 +163,15 @@ function mwFailure(resp, method, url) {
 	}
 }
 
+// after calling response handler - tell the server how long this request took
 function mwAfter(resp, method, url) {
-	// tell the server how long this request took
 	var endtime = performance.now();
 	if (state.loggedIn)
 		postLatency(url, Math.floor(endtime-resp.myXhrStartTime));
 }
 
-var xhrGet = spa.httpReqFunc("GET", mwReq, mwBefore, undefined, mwFailure, mwAfter);
-var xhrPostJson = spa.httpReqFunc("POST", mwReqJson, mwBefore, undefined, mwFailure, mwAfter);
+var xhrGet = spa.httpReqFunc("GET", mwReq, mwBefore, mwFailure, mwAfter);
+var xhrPostJson = spa.httpReqFunc("POST", mwReqJson, mwBefore, mwFailure, mwAfter);
 
 // return true if it's ok to stay on the current page when we receive a
 // 401 (unauthorized) status code, rather than redirecting to the login page.
